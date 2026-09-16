@@ -1,6 +1,8 @@
 import { drizzle } from "drizzle-orm/node-postgres"
 import { Pool } from "pg"
 
+import { budgetRelations } from "@/features/budgets/db/schema"
+
 import { authRelations } from "./db/auth-schema"
 
 const pool = new Pool({
@@ -9,5 +11,5 @@ const pool = new Pool({
 
 export const db = drizzle({
   client: pool,
-  relations: authRelations,
+  relations: { ...authRelations, ...budgetRelations },
 })

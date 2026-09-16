@@ -5,7 +5,7 @@ config({ path: ".env.local" })
 config()
 
 export default defineConfig({
-  schema: "./lib/db/auth-schema.ts",
+  schema: ["./lib/db/auth-schema.ts", "./features/budgets/db/schema.ts"],
   out: "./drizzle",
   dialect: "postgresql",
   dbCredentials: {
