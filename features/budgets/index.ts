@@ -50,3 +50,14 @@ export {
 } from "./repo/budget-handles"
 
 export { createBrowserRepo, getOrCreateBrowserRepo } from "./repo/create-browser-repo"
+
+export {
+  BUDGET_MEMBERSHIP_ROLES,
+  BUDGET_STATUSES,
+  budget,
+  budgetMembership,
+  type BudgetMembershipRole,
+  type BudgetStatus,
+} from "./db/schema"
+
+export type { AccessibleBudget } from "./db/membership"
