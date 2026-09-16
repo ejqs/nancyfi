@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "test": "bun test",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
@@ -14,6 +15,11 @@
     "auth:generate": "bun --env-file=.env.local x auth@latest generate --config ./lib/auth.ts --output ./lib/db/auth-schema.ts --yes"
   },
   "dependencies": {
+    "@automerge/automerge": "^3.4.1",
+    "@automerge/automerge-repo": "^2.6.0-alpha.3",
+    "@automerge/automerge-repo-network-broadcastchannel": "^2.6.0-alpha.3",
+    "@automerge/automerge-repo-react-hooks": "^2.6.0-alpha.3",
+    "@automerge/automerge-repo-storage-indexeddb": "^2.6.0-alpha.3",
     "@base-ui/react": "^1.8.0",
     "@better-auth/drizzle-adapter": "^1.7.5",
     "better-auth": "^1.7.5",
