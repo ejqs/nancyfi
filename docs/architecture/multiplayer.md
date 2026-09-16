@@ -28,9 +28,21 @@ Budgets are collaborative. Each user can have **many budgets**. Users can **invi
 
 Invites and membership are system concerns documented here; budget-domain rules live under `features/budgets/docs/`.
 
+### Membership (shipped)
+
+| Concern | Where |
+| --- | --- |
+| Tables | `budget`, `budget_membership` (Postgres / Drizzle) |
+| Roles | `owner` \| `contributor` — assigned only by control-plane APIs |
+| Create | Creator is always inserted as `owner` (role is not client-supplied) |
+| List | Derived from `budget_membership` for the signed-in user |
+| CRDT | Must not authorize role elevation; ignore any role-like fields in the doc |
+
+Server entry points: `features/budgets/actions.ts` (`createBudgetAction`, `listBudgetsAction`, …).
 ## Open decisions
 
 - Invite UX: email link, in-app username, share code.
 - Default invite role: `contributor` (no separate viewer role yet).
 - Whether contributors can invite others.
 - Offline invite acceptance behavior.
+- Revoking access / leaving a budget (required before production invites).

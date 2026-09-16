@@ -11,6 +11,16 @@ System context: [product vision](../../../docs/product-vision.md), [multiplayer]
 
 A budget is the thing a person (or group) plans and tracks money against. One user may have many budgets. A budget can be shared via invites. Content is stored as **accounts**, balanced **entries**, and declarative **plans**; **rules** automate how plans and events produce proposed entries.
 
+## App surfaces (shipped)
+
+| Surface | Path / component |
+| --- | --- |
+| Budget list + create | Dashboard (`BudgetListPanel`) — membership-backed |
+| Open / rename / archive | `/budgets/[budgetId]` (`BudgetWorkspace`) |
+| Local CRDT store | `BudgetRepoProvider` + `createBudgetInRepo` |
+
+Create flow: client imports schema-init bytes into Automerge Repo, then `createBudgetAction` registers catalog + owner membership. Rename updates CRDT `name` and catalog `budget.name`. Archive sets control-plane `status = archived` (owner only).
+
 ## Requirements (feature)
 
 ### Must
@@ -32,9 +42,14 @@ A budget is the thing a person (or group) plans and tracks money against. One us
 
 ## Open decisions
 
-- Archive vs hard delete and tombstone behavior under CRDT rules.
-- Whether “budgets list” is a separate root document or derived from membership records.
+- Invite UX and revoke/leave behavior — see [multiplayer](../../../docs/architecture/multiplayer.md).
 - Posting sign convention, holiday calendars, and auto-post policy — see [data-model.md](./data-model.md).
+- Hard delete of Automerge docs (archive on control plane is the shipped path).
+
+## Resolved
+
+- **Budgets list** is derived from control-plane `budget_membership` records (not a separate Automerge root doc).
+- **Archive** sets `budget.status = archived` on the control plane (owner only). CRDT content is retained locally; no tombstone delete yet.
 
 ## Related docs
 
