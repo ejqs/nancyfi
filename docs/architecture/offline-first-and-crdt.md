@@ -60,6 +60,7 @@ Service `automerge-sync` in the nancyfi Railway project:
 - Binds Railway `PORT` (falls back to `AUTOMERGE_SYNC_PORT` locally)
 - Persists under the attached volume (`RAILWAY_VOLUME_MOUNT_PATH/automerge-sync`)
 - Public URL → set on the web app as `NEXT_PUBLIC_AUTOMERGE_SYNC_URL=wss://…` (rebuild required; `NEXT_PUBLIC_*` is build-time)
+- **Existing budgets:** open once on the device that already has IndexedDB data after sync is configured — the app nudges an empty Automerge change so the sync server receives the doc. New budgets created while connected upload automatically.
 
 Work: [NAN-32](https://linear.app/nancyfi/issue/NAN-32/deploy-automerge-sync-server-on-railway).
 

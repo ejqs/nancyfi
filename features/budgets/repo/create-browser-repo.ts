@@ -49,6 +49,9 @@ export function createBrowserRepo(): Repo {
   return new Repo({
     storage: new IndexedDBStorageAdapter(INDEXED_DB_NAME),
     network,
+    // Always offer our docs to the sync server (and other tabs). The server
+    // still uses announce:false so it does not flood every peer with every doc.
+    sharePolicy: async () => true,
   })
 }
 

@@ -25,9 +25,9 @@ export function SyncStatusIndicator({ className }: { className?: string }) {
         status.phase === "offline"
           ? "You can keep editing. Changes sync when you are back online."
           : status.phase === "syncing"
-            ? "Syncing with other open tabs or the sync server."
+            ? "Connecting to the sync server for cross-device sync…"
             : status.syncConfigured
-              ? "Saved on this device and connected to sync."
+              ? "Saved on this device and connected to the sync server."
               : "Saved on this device only. Cross-browser sync is not configured."
       }
     >

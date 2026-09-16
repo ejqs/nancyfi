@@ -23,6 +23,8 @@ import { WebSocketServerAdapter } from "@automerge/automerge-repo-network-websoc
 import { NodeFSStorageAdapter } from "@automerge/automerge-repo-storage-nodefs"
 import { WebSocketServer } from "ws"
 
+import { SYNC_SERVER_PEER_ID } from "./sync-constants"
+
 function resolvePort(): number {
   const raw =
     process.env.PORT?.trim() ||
@@ -56,8 +58,9 @@ const wss = new WebSocketServer({ port, host: "0.0.0.0" })
 const adapter = new WebSocketServerAdapter(wss)
 
 const repo = new Repo({
-  peerId: "nancyfi-sync-server" as PeerId,
+  peerId: SYNC_SERVER_PEER_ID as PeerId,
   // Persist on disk; do not announce every doc to every peer — clients request by id.
+  // access stays true (legacy sharePolicy maps announce→false, access→true).
   sharePolicy: async () => false,
   network: [adapter],
   storage: new NodeFSStorageAdapter(dataDir),
