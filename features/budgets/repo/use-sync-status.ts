@@ -3,23 +3,28 @@
 import { useEffect, useState } from "react"
 import { useRepo } from "@automerge/automerge-repo-react-hooks"
 
-export type SyncPhase = "offline" | "online" | "syncing"
+import { getAutomergeSyncUrl } from "./create-browser-repo"
+import { deriveSyncPhase, type SyncPhase } from "./sync-status"
+
+export type { SyncPhase } from "./sync-status"
 
 export type SyncStatus = {
   phase: SyncPhase
   online: boolean
   peerCount: number
   label: string
+  syncConfigured: boolean
 }
 
 /**
  * Derived sync UI state:
  * - offline: browser reports offline
- * - syncing: online and at least one peer is connected (tab/network sync active)
- * - online: online with no peers (ready; waiting for remote/tab peers)
+ * - syncing: remote sync is configured but no peer is connected yet
+ * - online: local-only is ready, or at least one sync peer is connected
  */
 export function useSyncStatus(): SyncStatus {
   const repo = useRepo()
+  const syncConfigured = Boolean(getAutomergeSyncUrl())
   const [online, setOnline] = useState(
     typeof navigator === "undefined" ? true : navigator.onLine,
   )
@@ -34,7 +39,6 @@ export function useSyncStatus(): SyncStatus {
     const syncPeers = () => setPeerCount(repo.peers.length)
     syncPeers()
 
-    // Repo emits document/peer activity through the network subsystem.
     const network = repo.networkSubsystem
     network.on("peer", syncPeers)
     network.on("peer-disconnected", syncPeers)
@@ -50,18 +54,20 @@ export function useSyncStatus(): SyncStatus {
     }
   }, [repo])
 
-  const phase: SyncPhase = !online
-    ? "offline"
-    : peerCount > 0
-      ? "syncing"
-      : "online"
+  const phase: SyncPhase = deriveSyncPhase({
+    online,
+    syncConfigured,
+    peerCount,
+  })
 
   const label =
     phase === "offline"
       ? "Offline"
       : phase === "syncing"
-        ? `Syncing · ${peerCount} peer${peerCount === 1 ? "" : "s"}`
-        : "Online · local only"
+        ? "Syncing"
+        : syncConfigured
+          ? "Synced"
+          : "Local only"
 
-  return { phase, online, peerCount, label }
+  return { phase, online, peerCount, label, syncConfigured }
 }

@@ -28,8 +28,32 @@ Guidance from [Modeling Data](https://automerge.org/docs/cookbook/modeling-data/
 
 If notes or descriptions need collaborative rich text, use Automerge’s ProseMirror integration ([React cookbook](https://automerge.org/docs/cookbook/rich-text-prosemirror-react/)). Keep rich text behind a clear field in the budget document; do not force a rich editor for every string.
 
+## Shipped adapters (local + sync)
+
+| Layer | Adapter |
+| --- | --- |
+| Browser storage | IndexedDB (`nancyfi-automerge`) |
+| Same-browser tabs | BroadcastChannel |
+| Cross-browser / devices (dev) | WebSocket client → `bun run sync` (NodeFS on disk) |
+
+### Local sync server
+
+```bash
+# Terminal 1
+bun run sync
+
+# Terminal 2 — ensure .env.local has:
+# NEXT_PUBLIC_AUTOMERGE_SYNC_URL=ws://127.0.0.1:3030
+bun run dev
+```
+
+1. Open the budget in the browser that already has it (e.g. Chrome) so it pushes to the sync server.
+2. Open the same budget URL in Safari / Cursor browser — it should load via sync.
+
+Env: `AUTOMERGE_SYNC_PORT`, `AUTOMERGE_SYNC_DATA`, `NEXT_PUBLIC_AUTOMERGE_SYNC_URL` (see `.env.example`). Work: [NAN-30](https://linear.app/nancyfi/issue/NAN-30/automerge-websocket-sync-server-cross-browser).
+
 ## Open decisions
 
-- Exact Automerge Repo storage + network adapters for web (IndexedDB / sync server).
-- Auth / encryption boundaries relative to CRDT payloads.
+- Auth / encryption boundaries relative to CRDT payloads (v1 sync is unauthenticated local-dev).
 - What lives in Automerge vs relational/auth systems (accounts, invites metadata, billing).
+- Production hosting of the sync peer (Railway / sidecar with the Next app).

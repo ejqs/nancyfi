@@ -22,7 +22,7 @@ export function BudgetRepoProvider({ children }: { children: ReactNode }) {
       } catch (err) {
         if (!cancelled) {
           setError(
-            err instanceof Error ? err.message : "Failed to start Automerge",
+            err instanceof Error ? err.message : "Failed to start local budget store",
           )
         }
       }

@@ -21,7 +21,15 @@ export function SyncStatusIndicator({ className }: { className?: string }) {
         className,
       )}
       data-sync-phase={status.phase}
-      title="Local Automerge sync status (IndexedDB + BroadcastChannel)"
+      title={
+        status.phase === "offline"
+          ? "You can keep editing. Changes sync when you are back online."
+          : status.phase === "syncing"
+            ? "Syncing with other open tabs or the sync server."
+            : status.syncConfigured
+              ? "Saved on this device and connected to sync."
+              : "Saved on this device only. Start bun run sync for cross-browser."
+      }
     >
       <span
         className={cn(
