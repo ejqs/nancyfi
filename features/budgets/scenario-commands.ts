@@ -6,6 +6,7 @@ import {
   buildBalancingPostings,
   ensureBudgetDocShape,
 } from "./mutations"
+import { accountPostedBalanceMinor } from "./plan-propose"
 import { createPaydaySchedule } from "./schedule"
 import type {
   Account,
@@ -14,6 +15,9 @@ import type {
   Plan,
   Schedule,
 } from "./types"
+
+/** Default P&L clearing account for balance resets when no offset is chosen. */
+export const BALANCE_ADJUSTMENTS_ACCOUNT_NAME = "Balance adjustments"
 
 type NamedAccountInput = {
   accountId?: string
@@ -424,6 +428,103 @@ export function applyCreateDebtRepayment(
   })
 
   return { accountIds, entryIds, planIds: [planId] }
+}
+
+export type ResetAccountBalanceInput = {
+  accountId: string
+  entryId?: string
+  description?: string
+  /** Financial date for the adjusting Entry (ISO). Defaults to now. */
+  effectiveAt?: string
+  /** Where the balancing effect lands. Defaults to auto Balance adjustments. */
+  offsetAccountId?: string
+  /** Name used when creating the default offset expense account. */
+  offsetAccountName?: string
+}
+
+/**
+ * Zero an Account’s posted signed balance by posting one adjusting Entry.
+ * Does not delete or void prior history. No-op when already 0.
+ */
+export function applyResetAccountBalance(
+  draft: BudgetDoc,
+  input: ResetAccountBalanceInput,
+): TaskResult {
+  ensureBudgetDocShape(draft)
+  const account = draft.accountsById[input.accountId]
+  if (!account || account.status !== "active") {
+    throw new Error("Account must be an active account")
+  }
+  if (input.offsetAccountId && input.offsetAccountId === input.accountId) {
+    throw new Error("Offset account must differ from the account being reset")
+  }
+
+  const currency = draft.defaultCurrency
+  const balance = accountPostedBalanceMinor(draft, account.id, currency)
+  if (balance === 0) {
+    return { accountIds: [], entryIds: [], planIds: [] }
+  }
+
+  const amountMinor = Math.abs(balance)
+  const accountIds: string[] = []
+  let offset: Account
+
+  if (input.offsetAccountId) {
+    offset = requireActiveAccount(
+      draft,
+      input.offsetAccountId,
+      ["asset", "liability", "income", "expense"],
+      "Offset",
+    )
+  } else {
+    const offsetName =
+      input.offsetAccountName?.trim() || BALANCE_ADJUSTMENTS_ACCOUNT_NAME
+    const existing = Object.values(draft.accountsById).find(
+      (candidate) =>
+        candidate.status === "active" &&
+        candidate.kind === "expense" &&
+        candidate.name.localeCompare(offsetName, undefined, {
+          sensitivity: "accent",
+        }) === 0,
+    )
+    if (existing?.id === account.id) {
+      throw new Error(
+        "Choose another account for the balancing adjustment",
+      )
+    }
+    const resolved = resolveNamedAccount(
+      draft,
+      { name: offsetName },
+      "expense",
+      "adjustment",
+    )
+    offset = resolved.account
+    if (resolved.created) accountIds.push(offset.id)
+  }
+
+  // Signed balance B needs posting −B on the target to reach 0.
+  // B > 0 → credit target (from); B < 0 → debit target (to).
+  const fromAccountId = balance > 0 ? account.id : offset.id
+  const toAccountId = balance > 0 ? offset.id : account.id
+  const entryId = input.entryId ?? taskId("adjustment")
+
+  applyUpsertEntry(draft, {
+    id: entryId,
+    description:
+      input.description?.trim() || `Reset ${account.name} to zero`,
+    effectiveAt: input.effectiveAt ?? new Date().toISOString(),
+    status: "posted",
+    postings: buildBalancingPostings({
+      fromAccountId,
+      toAccountId,
+      amountMinor,
+      currency,
+      fromRole: "adjustment",
+      toRole: "adjustment",
+    }),
+  })
+
+  return { accountIds, entryIds: [entryId], planIds: [] }
 }
 
 export function planSetupIssue(doc: BudgetDoc, plan: Plan): string | null {

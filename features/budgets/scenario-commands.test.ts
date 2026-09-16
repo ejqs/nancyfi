@@ -11,6 +11,8 @@ import {
   applyRecordExpense,
   applyRecordIncome,
   applyRecordTransfer,
+  applyResetAccountBalance,
+  BALANCE_ADJUSTMENTS_ACCOUNT_NAME,
   planSetupIssue,
 } from "./scenario-commands"
 import { createPaydaySchedule } from "./schedule"
@@ -221,5 +223,95 @@ describe("scenario-safe task commands", () => {
     expect(planSetupIssue(doc, doc.plansById.legacy)).toBe(
       "Choose a payment account and who you owe",
     )
+  })
+
+  test("resets an asset account to zero via an adjusting Entry", () => {
+    let doc = withMoneyAccounts()
+    doc = Automerge.change(doc, (draft) => {
+      applyRecordTransfer(draft, {
+        entryId: "move",
+        description: "Move to cash",
+        effectiveAt: "2026-09-17T12:00:00.000Z",
+        amountMinor: 50_000,
+        fromAccountId: "checking",
+        toAccountId: "cash",
+      })
+      applyResetAccountBalance(draft, {
+        accountId: "cash",
+        entryId: "cash-reset",
+        effectiveAt: "2026-09-18T12:00:00.000Z",
+      })
+    })
+
+    expect(accountPostedBalanceMinor(doc, "cash", "PHP")).toBe(0)
+    expect(doc.entriesById.move.status).toBe("posted")
+    expect(doc.entriesById["cash-reset"].status).toBe("posted")
+    expect(doc.entriesById["cash-reset"].postings.every((p) => p.role === "adjustment")).toBe(
+      true,
+    )
+    const offset = Object.values(doc.accountsById).find(
+      (account) => account.name === BALANCE_ADJUSTMENTS_ACCOUNT_NAME,
+    )
+    expect(offset?.kind).toBe("expense")
+    expect(accountPostedBalanceMinor(doc, offset!.id, "PHP")).toBe(50_000)
+  })
+
+  test("resets a liability account to zero without erasing principal history", () => {
+    let doc = withMoneyAccounts()
+    doc = Automerge.change(doc, (draft) => {
+      applyCreateDebtRepayment(draft, {
+        planId: "mom-plan",
+        openingEntryId: "mom-principal",
+        name: "Debt to Mom",
+        paymentAmountMinor: 10_000,
+        originalAmountMinor: 120_000,
+        effectiveAt: "2026-09-01T12:00:00.000Z",
+        paymentAccountId: "checking",
+        liability: { name: "Owed to Mom" },
+        purchaseCategory: { name: "Annual sub" },
+        schedule: createPaydaySchedule({ timezone: draft.timezone }),
+      })
+    })
+    const liabilityId = doc.plansById["mom-plan"].linkedAccountIds[1]
+    doc = Automerge.change(doc, (draft) => {
+      applyResetAccountBalance(draft, {
+        accountId: liabilityId,
+        entryId: "mom-reset",
+        effectiveAt: "2026-09-20T12:00:00.000Z",
+        description: "Write off remaining debt",
+      })
+    })
+
+    expect(accountPostedBalanceMinor(doc, liabilityId, "PHP")).toBe(0)
+    expect(doc.entriesById["mom-principal"].status).toBe("posted")
+    expect(doc.entriesById["mom-reset"].description).toBe(
+      "Write off remaining debt",
+    )
+  })
+
+  test("reset is a no-op when the account is already zero", () => {
+    let doc = withMoneyAccounts()
+    let result = { accountIds: [] as string[], entryIds: [] as string[], planIds: [] as string[] }
+    doc = Automerge.change(doc, (draft) => {
+      result = applyResetAccountBalance(draft, {
+        accountId: "checking",
+        entryId: "noop",
+      })
+    })
+    expect(result.entryIds).toEqual([])
+    expect(doc.entriesById.noop).toBeUndefined()
+    expect(accountPostedBalanceMinor(doc, "checking", "PHP")).toBe(0)
+  })
+
+  test("rejects resetting an archived account", () => {
+    let doc = withMoneyAccounts()
+    doc = Automerge.change(doc, (draft) => {
+      draft.accountsById.cash.status = "archived"
+    })
+    expect(() =>
+      Automerge.change(doc, (draft) => {
+        applyResetAccountBalance(draft, { accountId: "cash" })
+      }),
+    ).toThrow("Account must be an active account")
   })
 })
