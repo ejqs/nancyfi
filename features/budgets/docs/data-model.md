@@ -94,8 +94,6 @@ An Entry is a proposed or posted financial event.
 
 **Sign convention (NAN-19):** positive `amountMinor` is a debit; negative is a credit. Assets and expenses increase with debits; liabilities and income increase with credits. Posted Entries balance per currency (sum of signed amounts = 0 per currency). The UI can present a simple from/to amount form and generate the balancing posting internally (`buildBalancingPostings`).
 
-**Reset to zero ([NAN-34](https://linear.app/nancyfi/issue/NAN-34/reset-account-balance-to-zero)):** `applyResetAccountBalance` posts one balanced Entry with posting `role: adjustment` so the Account’s signed posted balance becomes 0. Prior Entries stay posted. When no offset Account is supplied, a shared expense Account named **Balance adjustments** is created or reused.
-
 This replaces positional `amounts[]`: ordering is unsafe under concurrent insertion, and a raw amount does not explain whether it is a charge, payment, allocation, or adjustment.
 
 ## Plan

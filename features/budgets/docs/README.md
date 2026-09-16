@@ -32,7 +32,7 @@ A budget is the thing a person (or group) plans and tracks money against. One us
 
 Create flow: client imports schema-init bytes into Automerge Repo, then `createBudgetAction` registers catalog + owner membership. Rename updates CRDT `name` and catalog `budget.name`. Archive sets control-plane `status = archived` (owner only).
 
-Accounts, Plans, and Entries mutate the local Automerge doc via draft-safe `apply*` helpers. Catalog Plan templates copy into `planTemplatesById` via `applySeedCatalogPlanTemplates`. Posted balances use `accountPostedBalanceMinor` / `listAccountBalances`. Scenario-safe `applyResetAccountBalance` zeros an Account by posting an adjusting Entry (history kept; UI: Accounts → **Reset to 0**).
+Accounts, Plans, and Entries mutate the local Automerge doc via draft-safe `apply*` helpers. Catalog Plan templates copy into `planTemplatesById` via `applySeedCatalogPlanTemplates`. Posted balances use `accountPostedBalanceMinor` / `listAccountBalances`.
 
 Default creation uses scenario-safe task commands. Those commands atomically
 create or validate the Accounts, Entries, Plans, and schedules needed for the

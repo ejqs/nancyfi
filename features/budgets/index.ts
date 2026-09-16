@@ -94,8 +94,6 @@ export {
   applyRecordExpense,
   applyRecordIncome,
   applyRecordTransfer,
-  applyResetAccountBalance,
-  BALANCE_ADJUSTMENTS_ACCOUNT_NAME,
   planSetupIssue,
   type CreateDebtRepaymentInput,
   type CreateSalaryInput,
@@ -103,7 +101,6 @@ export {
   type RecordExpenseInput,
   type RecordIncomeInput,
   type RecordTransferInput,
-  type ResetAccountBalanceInput,
 } from "./scenario-commands"
 
 export {

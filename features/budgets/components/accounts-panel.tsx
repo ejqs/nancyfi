@@ -10,7 +10,6 @@ import { Label } from "@/components/ui/label"
 import { listAccountBalances } from "../balances"
 import { formatMinor } from "../money-format"
 import { applyUpsertAccount } from "../mutations"
-import { applyResetAccountBalance } from "../scenario-commands"
 import type { Account, AccountKind, BudgetDoc } from "../types"
 import {
   ListRow,
@@ -129,32 +128,6 @@ export function AccountsPanel({ doc, changeDoc }: AccountsPanelProps) {
       if (editingId === account.id) resetForm()
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to archive account")
-    }
-  }
-
-  function handleResetToZero(account: Account) {
-    const balance = balanceById.get(account.id)
-    if (!balance || balance.balanceMinor === 0) return
-    const formatted = formatMinor(balance.balanceMinor, balance.currency)
-    if (
-      !window.confirm(
-        `Reset “${account.name}” from ${formatted} to 0? This posts an adjustment and keeps prior history.`,
-      )
-    ) {
-      return
-    }
-    try {
-      changeDoc((draft) => {
-        applyResetAccountBalance(draft, {
-          accountId: account.id,
-          effectiveAt: new Date().toISOString(),
-        })
-      })
-      setError(null)
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to reset account balance",
-      )
     }
   }
 
@@ -286,18 +259,6 @@ export function AccountsPanel({ doc, changeDoc }: AccountsPanelProps) {
                   >
                     Edit
                   </Button>
-                  {account.status === "active" &&
-                  balance &&
-                  balance.balanceMinor !== 0 ? (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleResetToZero(account)}
-                    >
-                      Reset to 0
-                    </Button>
-                  ) : null}
                   {account.status === "active" ? (
                     <Button
                       type="button"
