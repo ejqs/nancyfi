@@ -5,8 +5,8 @@
   "terminals": [
     {
       "name": "next-dev",
-      "command": "export PATH=\"$HOME/.bun/bin:$PATH\" && bun run dev",
-      "description": "Next.js dev server on http://localhost:3000"
+      "command": "export PATH=\"$HOME/.bun/bin:$PATH\" && export DATABASE_URL=\"postgresql://nancyfi:nancyfi@127.0.0.1:5432/nancyfi\" && bash .cursor/dev-start.sh && bun run dev",
+      "description": "Next.js dev server on http://localhost:3000 (uses the local Postgres)"
     }
   ],
   "ports": [

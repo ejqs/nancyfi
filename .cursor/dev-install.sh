@@ -11,6 +11,7 @@ PG_CLUSTER=main
 DB_NAME=nancyfi
 DB_USER=nancyfi
 DB_PASSWORD=nancyfi
+LOCAL_DATABASE_URL="postgresql://${DB_USER}:${DB_PASSWORD}@127.0.0.1:5432/${DB_NAME}"
 
 echo "==> Ensuring bun is installed"
 if ! command -v bun >/dev/null 2>&1 && [ ! -x "$HOME/.bun/bin/bun" ]; then
@@ -36,7 +37,7 @@ sudo -u postgres psql -tAc "SELECT 1 FROM pg_database WHERE datname='${DB_NAME}'
 echo "==> Ensuring .env.local exists"
 if [ ! -f .env.local ]; then
   cat > .env.local <<EOF
-DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@127.0.0.1:5432/${DB_NAME}
+DATABASE_URL=${LOCAL_DATABASE_URL}
 BETTER_AUTH_SECRET=$(openssl rand -base64 32)
 BETTER_AUTH_URL=http://localhost:3000
 # Placeholder: set a real Resend key to deliver auth emails.
@@ -51,7 +52,9 @@ fi
 echo "==> Installing JS dependencies"
 bun install
 
-echo "==> Applying database migrations"
-bun run db:migrate
+echo "==> Applying database migrations to the local database"
+# Force the local URL so migrations never touch an injected remote DATABASE_URL
+# secret (env vars would otherwise shadow .env.local).
+DATABASE_URL="${LOCAL_DATABASE_URL}" bun run db:migrate
 
 echo "==> Install complete"
