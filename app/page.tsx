@@ -1,14 +1,12 @@
-import { Dashboard } from "@/components/landing/dashboard"
+import { DashboardGate } from "@/components/landing/dashboard-gate"
 import { LandingPage } from "@/components/landing/landing-page"
-import { getSession } from "@/lib/session"
+import { getCurrentUser } from "@/lib/session"
 
 export default async function HomePage() {
-  const session = await getSession()
+  const user = await getCurrentUser()
 
-  if (session?.user) {
-    return (
-      <Dashboard name={session.user.name} email={session.user.email} />
-    )
+  if (user) {
+    return <DashboardGate name={user.name} email={user.email} />
   }
 
   return <LandingPage />
