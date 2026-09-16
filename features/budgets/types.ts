@@ -10,12 +10,12 @@ export type AccountStatus = "active" | "archived"
 
 export type EntryStatus = "proposed" | "posted" | "void"
 
+/** Mechanical kernel kinds. User-facing recipes are Plan templates. */
 export type PlanKind =
   | "income"
   | "allocation"
   | "subscription"
-  | "installment"
-  | "obligation"
+  | "repayment"
   | "other"
 
 export type PlanStatus = "active" | "paused" | "cancelled" | "completed"
@@ -78,10 +78,27 @@ export type Schedule = {
   occurrenceCount?: number
 }
 
+/**
+ * User or catalog recipe that seeds a Plan.
+ * “Installment (24 mo)” and “Debt to Mom” are templates over `repayment`, not separate kinds.
+ */
+export type PlanTemplate = {
+  id: string
+  name: string
+  description?: string
+  kind: PlanKind
+  defaultAmountOrFormula?: AmountOrFormula
+  defaultSchedule?: Schedule
+  /** Hint labels for UI / Lenses; not a second ledger */
+  labels?: string[]
+}
+
 export type Plan = {
   id: string
   name: string
   kind: PlanKind
+  /** Optional template that seeded this Plan */
+  templateId?: string
   status: PlanStatus
   amountOrFormula: AmountOrFormula
   schedule?: Schedule
@@ -121,6 +138,8 @@ export type BudgetDoc = {
   accountsById: Record<string, Account>
   entriesById: Record<string, Entry>
   plansById: Record<string, Plan>
+  /** User/household Plan recipes; catalog templates may also apply copies here */
+  planTemplatesById: Record<string, PlanTemplate>
   rulesAppliedById: Record<string, RuleApplied>
   ruleRunsById: Record<string, RuleRun>
 }

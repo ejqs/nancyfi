@@ -23,6 +23,7 @@ doc = Automerge.change(doc, { time: 0, message: "budget-schema-v1" }, (d) => {
   d.accountsById = {}
   d.entriesById = {}
   d.plansById = {}
+  d.planTemplatesById = {}
   d.rulesAppliedById = {}
   d.ruleRunsById = {}
 })

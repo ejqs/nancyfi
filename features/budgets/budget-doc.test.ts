@@ -3,6 +3,7 @@ import * as Automerge from "@automerge/automerge/slim"
 
 import {
   assertPostingsBalanced,
+  buildBalancingPostings,
   createBudgetDoc,
   loadBudgetSchema,
   money,
@@ -11,6 +12,7 @@ import {
   upsertPlan,
   upsertRuleApplied,
   upsertRuleRun,
+  voidEntry,
 } from "./index"
 import { ensureAutomergeWasm } from "./repo/ensure-wasm"
 
@@ -26,6 +28,7 @@ describe("budget Automerge data model", () => {
     expect(doc.accountsById).toEqual({})
     expect(doc.entriesById).toEqual({})
     expect(doc.plansById).toEqual({})
+    expect(doc.planTemplatesById).toEqual({})
     expect(doc.rulesAppliedById).toEqual({})
     expect(doc.ruleRunsById).toEqual({})
   })
@@ -114,6 +117,73 @@ describe("budget Automerge data model", () => {
     ).toThrow(/do not balance/)
   })
 
+  test("simple form helper builds a balancing posting pair", () => {
+    const postings = buildBalancingPostings({
+      fromAccountId: "cash",
+      toAccountId: "groceries",
+      amountMinor: 12_500,
+      currency: "php",
+      fromRole: "payment",
+      toRole: "expense",
+    })
+    expect(postings).toHaveLength(2)
+    expect(postings[0].money.amountMinor).toBe(-12_500)
+    expect(postings[1].money.amountMinor).toBe(12_500)
+    expect(postings[0].money.currency).toBe("PHP")
+    assertPostingsBalanced(postings)
+  })
+
+  test("void marks posted entry without deleting it", () => {
+    let doc = createBudgetDoc({ id: "b1", name: "Test" })
+    doc = upsertAccount(doc, { id: "cash", name: "Cash", kind: "asset" })
+    doc = upsertAccount(doc, {
+      id: "groceries",
+      name: "Groceries",
+      kind: "expense",
+    })
+    doc = upsertEntry(doc, {
+      id: "e1",
+      description: "Market run",
+      effectiveAt: "2026-09-16T00:00:00.000Z",
+      status: "posted",
+      postings: buildBalancingPostings({
+        fromAccountId: "cash",
+        toAccountId: "groceries",
+        amountMinor: 1000,
+        currency: "PHP",
+      }),
+    })
+
+    doc = voidEntry(doc, "e1")
+    expect(doc.entriesById.e1).toBeDefined()
+    expect(doc.entriesById.e1.status).toBe("void")
+    expect(doc.entriesById.e1.postings).toHaveLength(2)
+  })
+
+  test("account hierarchy parent can be set and cleared", () => {
+    let doc = createBudgetDoc({ id: "b1", name: "Test" })
+    doc = upsertAccount(doc, {
+      id: "expenses",
+      name: "Expenses",
+      kind: "expense",
+    })
+    doc = upsertAccount(doc, {
+      id: "food",
+      name: "Food",
+      kind: "expense",
+      parentId: "expenses",
+    })
+    expect(doc.accountsById.food.parentId).toBe("expenses")
+
+    doc = upsertAccount(doc, {
+      id: "food",
+      name: "Food",
+      kind: "expense",
+      parentId: null,
+    })
+    expect(doc.accountsById.food.parentId).toBeUndefined()
+  })
+
   test("plan kinds and rule application slots", () => {
     let doc = createBudgetDoc({ id: "b1", name: "Test" })
     doc = upsertAccount(doc, { id: "income", name: "Salary", kind: "income" })
@@ -162,5 +232,22 @@ describe("budget Automerge data model", () => {
     }
     expect(doc.rulesAppliedById.ra1.status).toBe("enabled")
     expect(doc.ruleRunsById.run1.occurrenceKey).toBe("2026-09-15")
+  })
+
+  test("ensureBudgetDocShape backfills missing maps on older docs", async () => {
+    const { ensureBudgetDocShape, budgetDocNeedsShapeFix } = await import(
+      "./mutations"
+    )
+    let doc = loadBudgetSchema()
+    // Simulate a pre-template doc: Automerge may omit later map fields.
+    doc = Automerge.change(doc, (draft) => {
+      delete (draft as { planTemplatesById?: unknown }).planTemplatesById
+    })
+    expect(budgetDocNeedsShapeFix(doc)).toBe(true)
+    doc = Automerge.change(doc, (draft) => {
+      ensureBudgetDocShape(draft)
+    })
+    expect(budgetDocNeedsShapeFix(doc)).toBe(false)
+    expect(doc.planTemplatesById).toEqual({})
   })
 })
