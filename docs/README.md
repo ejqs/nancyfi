@@ -20,6 +20,8 @@ Prefer **feature folders** over technical folders when a doc is about one busine
 
 Do not maintain a parallel task list in markdown. When work is discovered in docs or chat, create or update a Linear issue.
 
+**Before implementing:** read the relevant docs *and* the Linear issue. If the request, docs, and Linear disagree, clarify or update docs/Linear so they agree — then code. Keep issue descriptions and docs synced as work progresses.
+
 ## Index
 
 ### Product

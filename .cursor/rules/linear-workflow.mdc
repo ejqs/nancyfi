@@ -1,0 +1,32 @@
+---
+description: Sync docs and Linear before implementing; keep sources of truth aligned
+alwaysApply: true
+---
+
+# Docs + Linear workflow
+
+For **any** implementation task in this repo:
+
+## Before coding
+
+1. **Consult both sources of truth**
+   - **Design:** `docs/` and `features/*/docs/` (vision, requirements, data model, scenarios)
+   - **Work:** [Linear — Nancyfi](https://linear.app/nancyfi) (tasks, status, assignees)
+2. **Find or create the Linear issue** — do not invent a parallel task list in markdown/chat.
+3. **Reconcile mismatches first**
+   - If the user request conflicts with docs → **clarify with the user**, or **update the docs** when the intent is clearly a design change.
+   - If Linear conflicts with docs → sync them (update issue description and/or docs) before implementing.
+   - Do not silently implement against one source while the other says something else.
+4. **Update status** — move the issue to `In Progress` (or the correct active state) when you start.
+
+## While coding
+
+5. **Keep Linear synced** — check off Done-when items; note decisions, file paths, blockers, remaining work in the issue description.
+6. **Keep docs synced** — if implementation reveals a design decision or changes a documented model, update the relevant doc in the same effort (or open/update a Linear issue that tracks the doc change).
+7. **Implement against Done-when** — Linear acceptance criteria are the definition of done for the task; docs define *what* correct means.
+
+## When finished
+
+8. **Close the loop** — Done-when complete, issue → `Done`, short comment if useful. Docs and Linear must agree on what shipped.
+
+**Docs hold design. Linear holds work. Both must stay synced.**
