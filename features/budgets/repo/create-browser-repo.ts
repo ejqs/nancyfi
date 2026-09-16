@@ -12,7 +12,7 @@ import { BroadcastChannelNetworkAdapter } from "@automerge/automerge-repo-networ
 import { WebSocketClientAdapter } from "@automerge/automerge-repo-network-websocket"
 import { IndexedDBStorageAdapter } from "@automerge/automerge-repo-storage-indexeddb"
 
-const INDEXED_DB_NAME = "nancyfi-automerge"
+export const INDEXED_DB_NAME = "nancyfi-automerge"
 const BROADCAST_CHANNEL = "nancyfi-automerge-sync"
 
 let browserRepoSingleton: Repo | undefined
@@ -64,4 +64,27 @@ export function getOrCreateBrowserRepo(): Repo {
     browserRepoSingleton = createBrowserRepo()
   }
   return browserRepoSingleton
+}
+
+/** Drop the in-memory Repo so the next call opens a fresh store. */
+export function clearBrowserRepoSingleton(): void {
+  browserRepoSingleton = undefined
+}
+
+/**
+ * Clear local Automerge IndexedDB after a workspace reset.
+ * Call after control-plane reset succeeds; then reload the page.
+ */
+export function clearBrowserAutomergeStorage(): Promise<void> {
+  if (typeof window === "undefined") {
+    return Promise.resolve()
+  }
+  clearBrowserRepoSingleton()
+  return new Promise((resolve, reject) => {
+    const request = window.indexedDB.deleteDatabase(INDEXED_DB_NAME)
+    request.onsuccess = () => resolve()
+    request.onerror = () =>
+      reject(request.error ?? new Error("Failed to clear local budget data"))
+    request.onblocked = () => resolve()
+  })
 }

@@ -5,6 +5,9 @@ import { revalidatePath } from "next/cache"
 import { getCurrentUser } from "@/lib/session"
 
 import {
+  isValidUserAccountResetConfirmation,
+} from "./account-reset"
+import {
   acceptBudgetInvite,
   cancelBudgetInvite,
   createBudgetInvite,
@@ -20,6 +23,7 @@ import {
   listAccessibleBudgets,
   renameBudgetCatalog,
   requireBudgetAccess,
+  resetUserAccountData,
   type AccessibleBudget,
 } from "./db/membership"
 
@@ -158,6 +162,45 @@ export async function archiveBudgetAction(input: {
     return {
       ok: false,
       error: err instanceof Error ? err.message : "Failed to archive budget",
+    }
+  }
+}
+
+export type ResetUserAccountActionResult = {
+  archivedBudgetIds: string[]
+  leftBudgetIds: string[]
+  cancelledInviteCount: number
+}
+
+/**
+ * Reset the signed-in user’s workspace to 0 budgets (keeps login).
+ * Requires typed confirmation `RESET` from the client.
+ */
+export async function resetUserAccountAction(input: {
+  confirmation: string
+}): Promise<BudgetActionResult<ResetUserAccountActionResult>> {
+  const user = await requireSignedInUser()
+  if (!user) return { ok: false, error: "Sign in required" }
+
+  if (!isValidUserAccountResetConfirmation(input.confirmation)) {
+    return {
+      ok: false,
+      error: "Type RESET to confirm resetting your account",
+    }
+  }
+
+  try {
+    const data = await resetUserAccountData({
+      userId: user.id,
+      email: user.email,
+    })
+    revalidatePath("/")
+    return { ok: true, data }
+  } catch (err) {
+    return {
+      ok: false,
+      error:
+        err instanceof Error ? err.message : "Failed to reset your account",
     }
   }
 }

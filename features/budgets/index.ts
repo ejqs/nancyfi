@@ -116,6 +116,14 @@ export {
 } from "./catalog-plan-templates"
 
 export {
+  isValidUserAccountResetConfirmation,
+  planUserAccountReset,
+  USER_ACCOUNT_RESET_CONFIRMATION,
+  type UserAccountResetPlanItem,
+  type UserMembershipSnapshot,
+} from "./account-reset"
+
+export {
   adjustToPreviousWeekday,
   buildOccurrenceId,
   calendarDateInTimezone,
@@ -137,6 +145,9 @@ export {
   createBrowserRepo,
   getAutomergeSyncUrl,
   getOrCreateBrowserRepo,
+  clearBrowserAutomergeStorage,
+  clearBrowserRepoSingleton,
+  INDEXED_DB_NAME,
 } from "./repo/create-browser-repo"
 
 export {
