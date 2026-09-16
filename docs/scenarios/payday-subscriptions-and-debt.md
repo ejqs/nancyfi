@@ -130,6 +130,32 @@ This mapping is informative; the scenario remains valid if implementation detail
 
 See [system data model](../architecture/data-model.md), [budget data model](../../features/budgets/docs/data-model.md), and [Lenses and personalization](../architecture/lenses-and-personalization.md).
 
+## Task command invariants
+
+The default UI does not expose primitive construction. A user chooses a task;
+Nancyfi creates or validates the complete primitive set in one Automerge
+change:
+
+1. **Expense** — payment asset, expense category, and balanced posted Entry.
+2. **Income** — income source, deposit asset, and balanced posted Entry.
+3. **Salary** — income source, deposit asset, income Plan, and payday schedule.
+4. **Subscription** — expense category, payment asset, subscription Plan, and
+   schedule.
+5. **Debt repayment** — liability Account, payment asset, repayment Plan, and
+   optional opening-obligation Entry.
+
+A repayment Plan without a linked liability is incomplete and must not appear
+as valid debt. Existing incomplete records get a **Finish setup** path; they are
+not silently migrated because Nancyfi cannot infer who is owed or the original
+principal safely.
+
+Default product language is transaction / recurring item / needs review /
+prepare / confirm. Entry / Plan / proposed / post / void, Account kinds,
+posting direction, and occurrence count are reserved for advanced data views.
+
+Work:
+[NAN-31](https://linear.app/nancyfi/issue/NAN-31/simplify-core-money-flow-with-scenario-safe-tasks).
+
 ## Acceptance invariants
 
 1. **Exact money:** values use integer minor units; conversions retain currencies and an explicit exchange rate.
@@ -138,6 +164,8 @@ See [system data model](../architecture/data-model.md), [budget data model](../.
 4. **Derived debt:** outstanding debt equals posted obligation changes and repayments.
 5. **Explainability:** every proposed/generated Entry links to the Plan occurrence and Rule version that produced it.
 6. **Variable actual vs Plan:** editing a proposed salary Entry (or matching a deposit) does not delete the RuleRun; percentage allocations use actual salary; the Plan’s typical amount is unchanged by one-off variance.
+7. **Scenario-safe commands:** task creation cannot complete with missing or
+   incompatible Accounts (for example, a repayment Plan without a liability).
 
 ## Policy decisions ([NAN-19](https://linear.app/nancyfi/issue/NAN-19/decide-open-money-schedule-fx-policies))
 

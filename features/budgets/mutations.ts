@@ -390,6 +390,33 @@ function assertLinkedAccountsExist(
   }
 }
 
+function assertPlanLinkedAccountKinds(
+  draft: BudgetDoc,
+  kind: PlanKind,
+  linkedAccountIds: string[],
+): void {
+  const requiredKinds =
+    kind === "income"
+      ? (["income", "asset"] as const)
+      : kind === "subscription"
+        ? (["asset", "expense"] as const)
+        : kind === "repayment"
+          ? (["asset", "liability"] as const)
+          : null
+  if (!requiredKinds) return
+  if (linkedAccountIds.length < 2) {
+    throw new Error(
+      `${kind} Plans require ${requiredKinds[0]} and ${requiredKinds[1]} accounts`,
+    )
+  }
+  const [from, to] = linkedAccountIds.map((id) => draft.accountsById[id])
+  if (from.kind !== requiredKinds[0] || to.kind !== requiredKinds[1]) {
+    throw new Error(
+      `${kind} Plans require ${requiredKinds[0]} → ${requiredKinds[1]} accounts`,
+    )
+  }
+}
+
 export type UpsertPlanInput = {
   id: string
   name: string
@@ -413,6 +440,7 @@ export function applyUpsertPlan(draft: BudgetDoc, input: UpsertPlanInput): void 
     ...(input.linkedAccountIds ?? existing?.linkedAccountIds ?? []),
   ]
   assertLinkedAccountsExist(draft, linkedAccountIds)
+  assertPlanLinkedAccountKinds(draft, input.kind, linkedAccountIds)
 
   const next: Plan = {
     id: input.id,

@@ -74,6 +74,36 @@ export {
 } from "./plan-propose"
 
 export {
+  countEntriesByStatus,
+  listAccountBalances,
+  listActiveSubscriptionPlans,
+  listDebtBoard,
+  listDebtDetails,
+  listPaydayPlans,
+  recentEntries,
+  type AccountBalanceRow,
+  type DebtDetail,
+} from "./balances"
+
+export { formatMinor, parseMajorToMinor } from "./money-format"
+
+export {
+  applyCreateDebtRepayment,
+  applyCreateSalary,
+  applyCreateSubscription,
+  applyRecordExpense,
+  applyRecordIncome,
+  applyRecordTransfer,
+  planSetupIssue,
+  type CreateDebtRepaymentInput,
+  type CreateSalaryInput,
+  type CreateSubscriptionInput,
+  type RecordExpenseInput,
+  type RecordIncomeInput,
+  type RecordTransferInput,
+} from "./scenario-commands"
+
+export {
   proposePlanOccurrences,
   seedCatalogPlanTemplates,
 } from "./plan-actions"
@@ -103,7 +133,11 @@ export {
   storeBudgetUrl,
 } from "./repo/budget-handles"
 
-export { createBrowserRepo, getOrCreateBrowserRepo } from "./repo/create-browser-repo"
+export {
+  createBrowserRepo,
+  getAutomergeSyncUrl,
+  getOrCreateBrowserRepo,
+} from "./repo/create-browser-repo"
 
 export {
   BUDGET_MEMBERSHIP_ROLES,
