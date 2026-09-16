@@ -28,7 +28,7 @@ export function SyncStatusIndicator({ className }: { className?: string }) {
             ? "Syncing with other open tabs or the sync server."
             : status.syncConfigured
               ? "Saved on this device and connected to sync."
-              : "Saved on this device only. Start bun run sync for cross-browser."
+              : "Saved on this device only. Cross-browser sync is not configured."
       }
     >
       <span

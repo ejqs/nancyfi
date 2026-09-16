@@ -128,8 +128,8 @@ export function BudgetWorkspace({
             </p>
             <p className="mt-1 text-xs text-muted-foreground">
               {syncConfigured
-                ? "Open it once in the browser that already has the data (while sync is running), then try again. Or confirm bun run sync is up."
-                : "Budget data stays in the browser where it was created until the Automerge sync server is running (bun run sync + NEXT_PUBLIC_AUTOMERGE_SYNC_URL)."}
+                ? "Open this budget once in the browser that already has it. Wait until the sync indicator shows Synced, then reload here."
+                : "Budget data stays in the browser where it was created until sync is configured (NEXT_PUBLIC_AUTOMERGE_SYNC_URL)."}
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
