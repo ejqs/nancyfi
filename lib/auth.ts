@@ -16,6 +16,7 @@ export const auth = betterAuth({
     enabled: true,
     requireEmailVerification: true,
     revokeSessionsOnPasswordReset: true,
+    minPasswordLength: 8,
     sendResetPassword: async ({ user, url }) => {
       void sendEmail({
         to: user.email,
@@ -38,6 +39,14 @@ export const auth = betterAuth({
         idempotencyKey: `email-verify/${user.id}/${Date.now()}`,
       })
     },
+  },
+  session: {
+    expiresIn: 60 * 60 * 24 * 7,
+    updateAge: 60 * 60 * 24,
+  },
+  rateLimit: {
+    enabled: true,
+    storage: "database",
   },
   plugins: [nextCookies()],
 })
