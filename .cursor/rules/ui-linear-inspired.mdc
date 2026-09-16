@@ -1,0 +1,34 @@
+---
+description: Product UI must follow Linear-inspired list/shell/settings patterns
+globs: "**/*.{tsx,jsx,css}"
+alwaysApply: false
+---
+
+# Linear-inspired product UI
+
+When building or changing **signed-in product UI** (budget workspace, lists, boards, app shell, **settings**), follow `docs/architecture/ui-linear-inspired.md`.
+
+## Must
+
+1. Prefer **sidebar + main list/board**, not a metric-card dashboard.
+2. Use **grouped collapsible lists** with count + inline add (`+`).
+3. Use **dense single-line rows** (status icon, title, pills, trailing date/amount).
+4. Map categorization like Linear: kernel `kind` = issue type; `labels[]` = labels; Plan templates = templates; Lenses = custom views.
+5. Quiet chrome; color only for status, labels, money sign.
+6. **Settings:** grouped settings sidebar + setting rows (title, description, right-aligned control). Structure by default; customize labels/templates/sidebar/Lenses/DisplayProfiles — not ledger physics.
+7. Split **personal** vs **budget-shared** settings clearly.
+8. **Taxonomy management:** Workspace ≈ app account; Team ≈ Budget. Labels (not a second “tags” system) managed in a Linear-like catalog (color dot, groups, New label). Statuses = fixed kernel buckets with optional soft names inside — never open-ended money states.
+9. **Keyboard-first:** `⌘/Ctrl K` command menu is the escape hatch for every action; single-key / `G`/`O` chords for common paths; `J`/`K` + `X` for list selection; show shortcut hints; no mouse-only mutations.
+
+## Must not
+
+- Card-per-row as the default Entry/Account/Plan list
+- Separate Category primitive when hierarchy + labels suffice
+- Growing kernel kinds for every user-facing phrase
+- Settings as an unstructured form dump
+- “Customize” that forks or privately rewrites shared money truth
+- Parallel tags + labels catalogs
+- User-editable Account kinds or unconstrained Entry status enums
+- Actions that exist only in pointer UI with no command id / shortcut path
+
+Marketing/landing pages may diverge; product chrome after sign-in should not.

@@ -20,6 +20,8 @@ Rules have two layers:
 
 Custom logic is an escape hatch, not the storage location for financial intent.
 
+Derived boards and Entry chrome are **Lenses** / **DisplayProfiles**, not Rules — see [Lenses and personalization](../../../docs/architecture/lenses-and-personalization.md). Rules may generate proposed Entries that Lenses then show.
+
 ## Plans are data; Rules are behavior
 
 - **Plan:** what should happen
@@ -32,6 +34,8 @@ Example: a Plan records “pay Mom a fixed amount twice monthly until August 202
 Without Plan, amount, recipient, cadence, end date, and remaining occurrences live only inside JavaScript. Nancyfi would need to execute arbitrary code to show upcoming payments, explain generated Entries, calculate remaining debt, or cancel safely. Rules would become an **uninspectable second database**.
 
 Rules may read Plans and events, generate proposed Entries, reconcile imported Entries, or update Plan lifecycle. They do not silently rewrite posted history.
+
+When a payday (or other) occurrence runs, the **RuleRun** is the audit that automation fired. The owner may edit the generated **proposed Entry** (e.g. actual salary ≠ Plan amount) before posting; that edit must not clear the RuleRun or require rewriting the Plan for a one-off variance. Percentage follow-ups should key off the actual Entry. See [variable actual salary](../../../docs/scenarios/payday-subscriptions-and-debt.md#variable-actual-salary-resolved).
 
 ## Rule definition
 

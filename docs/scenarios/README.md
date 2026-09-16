@@ -16,7 +16,7 @@ Before adding or changing a primitive, prove that the proposed model:
 4. Produces deterministic, idempotent results across offline devices.
 5. Preserves history when plans change or are cancelled.
 
-Common behavior should be represented as inspectable data. Sandboxed custom Rules remain the escape hatch for genuinely unusual logic.
+Common behavior should be represented as inspectable data. Sandboxed custom Rules remain the escape hatch for genuinely unusual logic. Derived boards use **Lenses** (household default + personal override) — see [Lenses and personalization](../architecture/lenses-and-personalization.md).
 
 ## Scenario catalog
 

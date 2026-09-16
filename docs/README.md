@@ -38,8 +38,11 @@ Do not maintain a parallel task list in markdown. When work is discovered in doc
 
 - [Offline-first & CRDTs](./architecture/offline-first-and-crdt.md)
 - [Data model](./architecture/data-model.md) — primitives index; detail in feature docs
+- [Lenses & personalization](./architecture/lenses-and-personalization.md) — per-user views vs shared ledger
+- [Public / guest share links](./architecture/public-share-links.md) — scoped view & limited guest actions (eventually)
 - [Multiplayer & sharing](./architecture/multiplayer.md)
 - [Responsive UI](./architecture/responsive.md)
+- [UI: Linear-inspired product chrome](./architecture/ui-linear-inspired.md) — list/shell patterns for signed-in UI
 - [MCP & email-driven updates](./architecture/mcp-and-email-updates.md) — brief; details in feature docs
 
 ### Conventions

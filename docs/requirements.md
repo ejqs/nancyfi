@@ -23,6 +23,7 @@ System-level requirements for Nancyfi. Feature-specific requirements live under 
 2. Deeper history / version browsing of budget documents.
 3. Roles beyond basic invitee access (viewer, editor, admin).
 4. **MCP** so the user’s own AI can update accounts/transactions (e.g. from email) — preferred over bank aggregation; see [features/mcp/docs](../features/mcp/docs/README.md) ([brief root note](./architecture/mcp-and-email-updates.md)).
+5. **Public / guest share links** — scoped view or limited guest actions (e.g. mark dinner share paid → flexible review status) without full membership; see [public-share-links](./architecture/public-share-links.md).
 
 ## Won’t (near term)
 

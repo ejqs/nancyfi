@@ -19,7 +19,7 @@ Paydays are:
 1. The 15th of the month.
 2. The final calendar day of the month.
 
-If either date falls on a weekend, payday moves to the nearest earlier weekday.
+If either date falls on a **weekend or a Philippine holiday**, payday moves to the nearest earlier weekday that is neither. **Current engine** (`features/budgets/schedule.ts`) adjusts weekends only; holiday calendars are a follow-on (see [NAN-19](https://linear.app/nancyfi/issue/NAN-19/decide-open-money-schedule-fx-policies); optional later: pluggable calendars / rules marketplace).
 
 At payday, the owner wants Nancyfi to:
 
@@ -29,6 +29,22 @@ At payday, the owner wants Nancyfi to:
 - show what remains available after those commitments.
 
 The same payday occurrence must not run twice when multiple offline devices reconnect.
+
+### Variable actual salary (resolved)
+
+Actual pay often differs from the Plan’s typical amount (absence, overtime, bonuses).
+
+**Do not edit the salary Plan for a one-off variance.** That Plan is the expectation for future paydays.
+
+Instead:
+
+1. The payday occurrence fires and a **RuleRun** is recorded (idempotent `occurrenceKey`).
+2. Automation creates a **proposed** salary **Entry** seeded from the Plan amount (or matches an imported deposit).
+3. The owner **edits the proposed Entry** to the actual amount before posting.
+4. Percentage **allocation** proposals recalculate from that **actual** proposed/posted salary, not from the Plan’s typical figure.
+5. Confirming posts the Entries. The RuleRun still proves the occurrence ran; the Entry holds what actually landed.
+
+Matching a real deposit (`onEntryMatched` / MCP) can satisfy the same occurrence with the bank amount — still one RuleRun, one logical result. Optional later: retain a seed/expected amount on the Entry to show “expected vs actual” without another table.
 
 ## Monthly allocation
 
@@ -55,7 +71,7 @@ Changing a percentage or salary amount must update the plan without rewriting al
 The subscription view includes online and offline services with different terms:
 
 - monthly services paid half on the 15th and half at month-end;
-- annual services whose cost is spread across 12 monthly reimbursements;
+- annual services whose cost is spread across 12 monthly reimbursements (**settlement cadence is customizable** per Plan; this scenario’s default: **split 1/12 across both paydays**);
 - purchases paid over a fixed installment term, such as 24 months;
 - services priced in another currency but settled in PHP;
 - services paid directly and services initially paid by the owner's mother.
@@ -106,11 +122,13 @@ This mapping is informative; the scenario remains valid if implementation detail
 | Budget and calendar | Budget |
 | Bank, cash, income, expense, and money owed to another person | Account |
 | Salary deposit, charge, allocation, or repayment that happened/is proposed | Entry with balanced Postings |
-| Subscription, salary expectation, allocation policy, installment, or obligation | Plan |
+| Subscription, salary expectation, allocation policy, installment purchase, or debt repayment | Plan (`subscription` / `income` / `allocation` / `repayment`; user **templates** for installment vs owe-Mom labels) |
 | Payday reaction, matching, percentage allocation, or unusual automation | Rule |
 | Exact currency value | Money |
+| Payday checklist, burn, subscriptions, debt board, custom rollups | Lens (household default and/or personal) |
+| How an Entry row/card looks for one member | DisplayProfile |
 
-See [system data model](../architecture/data-model.md) and [budget data model](../../features/budgets/docs/data-model.md).
+See [system data model](../architecture/data-model.md), [budget data model](../../features/budgets/docs/data-model.md), and [Lenses and personalization](../architecture/lenses-and-personalization.md).
 
 ## Acceptance invariants
 
@@ -119,10 +137,14 @@ See [system data model](../architecture/data-model.md) and [budget data model](.
 3. **Auditable history:** cancellation and plan edits never erase posted Entries.
 4. **Derived debt:** outstanding debt equals posted obligation changes and repayments.
 5. **Explainability:** every proposed/generated Entry links to the Plan occurrence and Rule version that produced it.
+6. **Variable actual vs Plan:** editing a proposed salary Entry (or matching a deposit) does not delete the RuleRun; percentage allocations use actual salary; the Plan’s typical amount is unchanged by one-off variance.
 
-## Open policy questions
+## Policy decisions ([NAN-19](https://linear.app/nancyfi/issue/NAN-19/decide-open-money-schedule-fx-policies))
 
-- Is an annual service's 1/12 monthly reimbursement paid once monthly or split across both paydays?
-- Should “weekday” adjustment consider only weekends or also Philippine holidays?
-- Which Entries may auto-post, and which require confirmation?
-- Which exchange rate applies: purchase-time, payment-time, or a manually agreed rate?
+All resolved:
+
+1. **Annual 1/12 reimbursement cadence** — Customizable per Plan. Scenario default: **split across both paydays** (each payday gets half of the monthly 1/12). Alternative: once monthly.
+2. **Weekday / holiday adjustment** — Adjust for **weekends and Philippine holidays** (previous open weekday). Engine today: weekends only; holiday calendars + optional pluggable calendars / rules marketplace are later work.
+3. **Auto-post vs confirmation** — Generated Entries stay **`proposed` until the user confirms**. Opt-in auto-post per Plan/Rule may come later.
+4. **FX rate** — Default to **purchase-time** rate; allow **small user adjustments** over time to correct error.
+5. **Posting sign convention** — **Positive `amountMinor` = debit; negative = credit.** Assets/expenses increase with debits; liabilities/income increase with credits. UI hides this via from→to balancing helpers.

@@ -4,8 +4,9 @@ Feature-scoped docs for **budgets** — the core collaboration unit in Nancyfi.
 
 System context: [product vision](../../../docs/product-vision.md), [multiplayer](../../../docs/architecture/multiplayer.md), [offline-first & CRDTs](../../../docs/architecture/offline-first-and-crdt.md), [data model index](../../../docs/architecture/data-model.md).
 
-**Data model:** [data-model.md](./data-model.md) (Budget, Account, Entry, Plan, and Money).  
-**Automation:** [features/rules](../../rules/docs/README.md).
+**Data model:** [data-model.md](./data-model.md) (Budget, Account, Entry, Plan / Plan templates, Money).  
+**Automation:** [features/rules](../../rules/docs/README.md).  
+**Views:** [Lenses and personalization](../../../docs/architecture/lenses-and-personalization.md) (household default + personal).
 
 ## Intent
 
@@ -17,9 +18,16 @@ A budget is the thing a person (or group) plans and tracks money against. One us
 | --- | --- |
 | Budget list + create | Dashboard (`BudgetListPanel`) — membership-backed |
 | Open / rename / archive | `/budgets/[budgetId]` (`BudgetWorkspace`) |
+| Members + invites | `MembersPanel` on budget workspace (owner invite by email; revoke / leave) |
+| Accept invite | `/invites/[token]` |
+| Accounts create/edit | `AccountsPanel` on budget workspace (kind + optional parent) |
+| Plans + templates | `PlansPanel` — kernel kinds, catalog seed, propose Entries, cancel |
+| Entries create / void | `EntriesPanel` — simple from/to/amount form → balancing postings; void (no hard-delete) |
 | Local CRDT store | `BudgetRepoProvider` + `createBudgetInRepo` |
 
 Create flow: client imports schema-init bytes into Automerge Repo, then `createBudgetAction` registers catalog + owner membership. Rename updates CRDT `name` and catalog `budget.name`. Archive sets control-plane `status = archived` (owner only).
+
+Accounts, Plans, and Entries mutate the local Automerge doc via draft-safe `apply*` helpers (`applyUpsertAccount` / `applyUpsertPlan` / `applyUpsertEntry` / `applyProposePlanOccurrences`, etc.). Catalog Plan templates copy into `planTemplatesById` via `applySeedCatalogPlanTemplates`.
 
 ## Requirements (feature)
 
@@ -42,14 +50,15 @@ Create flow: client imports schema-init bytes into Automerge Repo, then `createB
 
 ## Open decisions
 
-- Invite UX and revoke/leave behavior — see [multiplayer](../../../docs/architecture/multiplayer.md).
 - Posting sign convention, holiday calendars, and auto-post policy — see [data-model.md](./data-model.md).
 - Hard delete of Automerge docs (archive on control plane is the shipped path).
+- Whether contributors can invite (owners only today) — see [multiplayer](../../../docs/architecture/multiplayer.md).
 
 ## Resolved
 
 - **Budgets list** is derived from control-plane `budget_membership` records (not a separate Automerge root doc).
 - **Archive** sets `budget.status = archived` on the control plane (owner only). CRDT content is retained locally; no tombstone delete yet.
+- **Invites** — email link → `/invites/[token]`; always `contributor`; owners invite; revoke/leave on control plane (see multiplayer).
 
 ## Related docs
 
