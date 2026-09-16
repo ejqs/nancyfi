@@ -23,12 +23,14 @@ export function BudgetDetailGate({
   role,
   catalogName,
   userName,
+  userId,
 }: {
   budgetId: string
   automergeUrl: string
   role: BudgetMembershipRole
   catalogName: string
   userName: string
+  userId: string
 }) {
   return (
     <BudgetDetailClient
@@ -37,6 +39,7 @@ export function BudgetDetailGate({
       role={role}
       catalogName={catalogName}
       userName={userName}
+      userId={userId}
     />
   )
 }

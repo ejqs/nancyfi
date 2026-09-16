@@ -5,6 +5,16 @@ import { revalidatePath } from "next/cache"
 import { getCurrentUser } from "@/lib/session"
 
 import {
+  acceptBudgetInvite,
+  cancelBudgetInvite,
+  createBudgetInvite,
+  getInviteByToken,
+  leaveBudget,
+  listBudgetMembers,
+  listPendingInvites,
+  revokeBudgetMembership,
+} from "./db/invites"
+import {
   archiveBudgetCatalog,
   createBudgetWithOwner,
   listAccessibleBudgets,
@@ -148,6 +158,239 @@ export async function archiveBudgetAction(input: {
     return {
       ok: false,
       error: err instanceof Error ? err.message : "Failed to archive budget",
+    }
+  }
+}
+
+export type BudgetMemberItem = {
+  membershipId: string
+  userId: string
+  email: string
+  name: string
+  role: "owner" | "contributor"
+  createdAt: string
+}
+
+export type BudgetInviteItem = {
+  id: string
+  email: string
+  status: "pending" | "accepted" | "cancelled" | "expired"
+  expiresAt: string
+  createdAt: string
+  acceptUrl: string
+}
+
+export async function listBudgetMembersAction(
+  budgetId: string,
+): Promise<BudgetActionResult<BudgetMemberItem[]>> {
+  const user = await requireSignedInUser()
+  if (!user) return { ok: false, error: "Sign in required" }
+
+  try {
+    const data = await listBudgetMembers(budgetId, user.id)
+    return {
+      ok: true,
+      data: data.map((row) => ({
+        membershipId: row.membershipId,
+        userId: row.userId,
+        email: row.email,
+        name: row.name,
+        role: row.role,
+        createdAt: row.createdAt.toISOString(),
+      })),
+    }
+  } catch (err) {
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : "Failed to list members",
+    }
+  }
+}
+
+export async function listPendingInvitesAction(
+  budgetId: string,
+): Promise<BudgetActionResult<BudgetInviteItem[]>> {
+  const user = await requireSignedInUser()
+  if (!user) return { ok: false, error: "Sign in required" }
+
+  try {
+    const origin =
+      process.env.BETTER_AUTH_URL?.replace(/\/$/, "") ?? "http://localhost:3000"
+    const data = await listPendingInvites(budgetId, user.id)
+    return {
+      ok: true,
+      data: data.map((row) => ({
+        id: row.id,
+        email: row.email,
+        status: row.status,
+        expiresAt: row.expiresAt.toISOString(),
+        createdAt: row.createdAt.toISOString(),
+        acceptUrl: `${origin}/invites/${row.token}`,
+      })),
+    }
+  } catch (err) {
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : "Failed to list invites",
+    }
+  }
+}
+
+export async function createBudgetInviteAction(input: {
+  budgetId: string
+  email: string
+}): Promise<
+  BudgetActionResult<{
+    id: string
+    email: string
+    acceptUrl: string
+    emailSent: boolean
+    emailError?: string
+  }>
+> {
+  const user = await requireSignedInUser()
+  if (!user) return { ok: false, error: "Sign in required" }
+
+  try {
+    const data = await createBudgetInvite({
+      budgetId: input.budgetId,
+      email: input.email,
+      invitedByUserId: user.id,
+    })
+    revalidatePath(`/budgets/${input.budgetId}`)
+    return {
+      ok: true,
+      data: {
+        id: data.id,
+        email: data.email,
+        acceptUrl: data.acceptUrl,
+        emailSent: data.emailSent,
+        emailError: data.emailError,
+      },
+    }
+  } catch (err) {
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : "Failed to create invite",
+    }
+  }
+}
+
+export async function cancelBudgetInviteAction(input: {
+  inviteId: string
+  budgetId: string
+}): Promise<BudgetActionResult<{ inviteId: string }>> {
+  const user = await requireSignedInUser()
+  if (!user) return { ok: false, error: "Sign in required" }
+
+  try {
+    await cancelBudgetInvite({
+      inviteId: input.inviteId,
+      actorUserId: user.id,
+    })
+    revalidatePath(`/budgets/${input.budgetId}`)
+    return { ok: true, data: { inviteId: input.inviteId } }
+  } catch (err) {
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : "Failed to cancel invite",
+    }
+  }
+}
+
+export async function revokeBudgetMemberAction(input: {
+  budgetId: string
+  targetUserId: string
+}): Promise<BudgetActionResult<{ targetUserId: string }>> {
+  const user = await requireSignedInUser()
+  if (!user) return { ok: false, error: "Sign in required" }
+
+  try {
+    await revokeBudgetMembership({
+      budgetId: input.budgetId,
+      targetUserId: input.targetUserId,
+      actorUserId: user.id,
+    })
+    revalidatePath(`/budgets/${input.budgetId}`)
+    return { ok: true, data: { targetUserId: input.targetUserId } }
+  } catch (err) {
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : "Failed to revoke member",
+    }
+  }
+}
+
+export async function leaveBudgetAction(input: {
+  budgetId: string
+}): Promise<BudgetActionResult<{ budgetId: string }>> {
+  const user = await requireSignedInUser()
+  if (!user) return { ok: false, error: "Sign in required" }
+
+  try {
+    await leaveBudget({ budgetId: input.budgetId, userId: user.id })
+    revalidatePath("/")
+    revalidatePath(`/budgets/${input.budgetId}`)
+    return { ok: true, data: { budgetId: input.budgetId } }
+  } catch (err) {
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : "Failed to leave budget",
+    }
+  }
+}
+
+export async function getInvitePreviewAction(
+  token: string,
+): Promise<
+  BudgetActionResult<{
+    budgetName: string
+    email: string
+    status: "pending" | "accepted" | "cancelled" | "expired"
+    expiresAt: string
+  }>
+> {
+  try {
+    const invite = await getInviteByToken(token)
+    if (!invite) {
+      return { ok: false, error: "Invitation not found" }
+    }
+    return {
+      ok: true,
+      data: {
+        budgetName: invite.budgetName,
+        email: invite.email,
+        status: invite.status,
+        expiresAt: invite.expiresAt.toISOString(),
+      },
+    }
+  } catch (err) {
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : "Failed to load invitation",
+    }
+  }
+}
+
+export async function acceptBudgetInviteAction(input: {
+  token: string
+}): Promise<BudgetActionResult<{ budgetId: string }>> {
+  const user = await requireSignedInUser()
+  if (!user) return { ok: false, error: "Sign in required" }
+
+  try {
+    const data = await acceptBudgetInvite({
+      token: input.token,
+      userId: user.id,
+      userEmail: user.email,
+    })
+    revalidatePath("/")
+    revalidatePath(`/budgets/${data.budgetId}`)
+    return { ok: true, data: { budgetId: data.budgetId } }
+  } catch (err) {
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : "Failed to accept invitation",
     }
   }
 }

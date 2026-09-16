@@ -27,6 +27,7 @@ export default async function BudgetDetailPage({
       role={membership.role}
       catalogName={membership.name}
       userName={user.name}
+      userId={user.id}
     />
   )
 }

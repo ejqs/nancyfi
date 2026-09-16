@@ -6,6 +6,18 @@ export const metadata: Metadata = {
   title: "Sign in · Nancyfi",
 }
 
-export default function SignInPage() {
-  return <SignInForm />
+function safeNextPath(next: string | undefined): string {
+  if (!next || !next.startsWith("/") || next.startsWith("//")) {
+    return "/"
+  }
+  return next
+}
+
+export default async function SignInPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string }>
+}) {
+  const { next } = await searchParams
+  return <SignInForm nextPath={safeNextPath(next)} />
 }

@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input"
 import { Spinner } from "@/components/ui/spinner"
 import { authClient } from "@/lib/auth-client"
 
-export function SignUpForm() {
+export function SignUpForm({ nextPath }: { nextPath?: string }) {
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
@@ -31,11 +31,12 @@ export function SignUpForm() {
     const email = String(form.get("email") ?? "")
     const password = String(form.get("password") ?? "")
 
+    const callbackPath = nextPath ?? "/"
     const { error: signUpError } = await authClient.signUp.email({
       name,
       email,
       password,
-      callbackURL: `${window.location.origin}/`,
+      callbackURL: `${window.location.origin}${callbackPath}`,
     })
 
     setPending(false)
@@ -45,7 +46,9 @@ export function SignUpForm() {
       return
     }
 
-    router.push(`/verify-email?email=${encodeURIComponent(email)}`)
+    const verifyQs = new URLSearchParams({ email })
+    if (nextPath) verifyQs.set("next", nextPath)
+    router.push(`/verify-email?${verifyQs.toString()}`)
   }
 
   return (
@@ -102,7 +105,11 @@ export function SignUpForm() {
         <p className="text-center text-xs/relaxed text-muted-foreground">
           Already have an account?{" "}
           <Link
-            href="/sign-in"
+            href={
+              nextPath
+                ? `/sign-in?next=${encodeURIComponent(nextPath)}`
+                : "/sign-in"
+            }
             className="text-foreground underline-offset-4 hover:underline"
           >
             Sign in

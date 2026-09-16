@@ -12,13 +12,22 @@ import { Label } from "@/components/ui/label"
 
 import { archiveBudgetAction, renameBudgetAction } from "../actions"
 import type { BudgetMembershipRole } from "../db/schema"
+import {
+  budgetDocNeedsShapeFix,
+  ensureBudgetDocShape,
+} from "../mutations"
 import type { BudgetDoc } from "../types"
+import { AccountsPanel } from "./accounts-panel"
+import { EntriesPanel } from "./entries-panel"
+import { MembersPanel } from "./members-panel"
+import { PlansPanel } from "./plans-panel"
 
 type BudgetWorkspaceProps = {
   budgetId: string
   automergeUrl: AutomergeUrl | string
   role: BudgetMembershipRole
   catalogName: string
+  currentUserId: string
 }
 
 export function BudgetWorkspace({
@@ -26,6 +35,7 @@ export function BudgetWorkspace({
   automergeUrl,
   role,
   catalogName,
+  currentUserId,
 }: BudgetWorkspaceProps) {
   const router = useRouter()
   const [doc, changeDoc] = useDocument<BudgetDoc>(
@@ -40,6 +50,14 @@ export function BudgetWorkspace({
   useEffect(() => {
     if (doc?.name) setNameDraft(doc.name)
   }, [doc?.name])
+
+  // Backfill maps missing on docs created before newer schema fields.
+  useEffect(() => {
+    if (!doc || !budgetDocNeedsShapeFix(doc)) return
+    changeDoc((draft) => {
+      ensureBudgetDocShape(draft)
+    })
+  }, [doc, changeDoc])
 
   function handleRename(event: React.FormEvent) {
     event.preventDefault()
@@ -150,6 +168,16 @@ export function BudgetWorkspace({
           {error}
         </p>
       ) : null}
+
+      <AccountsPanel doc={doc} changeDoc={changeDoc} />
+      <PlansPanel doc={doc} changeDoc={changeDoc} />
+      <EntriesPanel doc={doc} changeDoc={changeDoc} />
+
+      <MembersPanel
+        budgetId={budgetId}
+        role={role}
+        currentUserId={currentUserId}
+      />
 
       {role === "owner" ? (
         <div className="border-t border-border pt-4">

@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input"
 import { Spinner } from "@/components/ui/spinner"
 import { authClient } from "@/lib/auth-client"
 
-export function SignInForm() {
+export function SignInForm({ nextPath = "/" }: { nextPath?: string }) {
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
@@ -33,7 +33,7 @@ export function SignInForm() {
     const { error: signInError } = await authClient.signIn.email({
       email,
       password,
-      callbackURL: `${window.location.origin}/`,
+      callbackURL: `${window.location.origin}${nextPath}`,
     })
 
     setPending(false)
@@ -43,7 +43,7 @@ export function SignInForm() {
       return
     }
 
-    router.push("/")
+    router.push(nextPath)
     router.refresh()
   }
 
@@ -96,7 +96,11 @@ export function SignInForm() {
         <p className="text-center text-xs/relaxed text-muted-foreground">
           Don&apos;t have an account?{" "}
           <Link
-            href="/sign-up"
+            href={
+              nextPath && nextPath !== "/"
+                ? `/sign-up?next=${encodeURIComponent(nextPath)}`
+                : "/sign-up"
+            }
             className="text-foreground underline-offset-4 hover:underline"
           >
             Sign up

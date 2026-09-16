@@ -23,12 +23,14 @@ export function BudgetDetailClient({
   role,
   catalogName,
   userName,
+  userId,
 }: {
   budgetId: string
   automergeUrl: string
   role: BudgetMembershipRole
   catalogName: string
   userName: string
+  userId: string
 }) {
   const router = useRouter()
 
@@ -75,6 +77,7 @@ export function BudgetDetailClient({
                 automergeUrl={automergeUrl}
                 role={role}
                 catalogName={catalogName}
+                currentUserId={userId}
               />
             </CardContent>
           </Card>
