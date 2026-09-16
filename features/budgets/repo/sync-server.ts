@@ -1,14 +1,19 @@
 /**
- * Dev Automerge sync peer: WebSocket + NodeFS.
+ * Automerge sync peer: WebSocket + NodeFS.
  *
  * Clients (Chrome / Safari / Cursor) connect with WebSocketClientAdapter and
- * sync budget docs through this process. Start alongside Next:
+ * sync budget docs through this process.
  *
+ * Local:
  *   bun run sync
  *
+ * Railway: separate `automerge-sync` service; binds `PORT`, persists under
+ * the volume mount (`RAILWAY_VOLUME_MOUNT_PATH` or `AUTOMERGE_SYNC_DATA`).
+ *
  * Env:
- *   AUTOMERGE_SYNC_PORT  (default 3030)
- *   AUTOMERGE_SYNC_DATA  (default .data/automerge-sync)
+ *   PORT / AUTOMERGE_SYNC_PORT  (Railway injects PORT; local default 3030)
+ *   AUTOMERGE_SYNC_DATA         (default .data/automerge-sync; or volume path)
+ *   RAILWAY_VOLUME_MOUNT_PATH   (preferred data root when a volume is attached)
  */
 import { mkdirSync } from "node:fs"
 import { resolve } from "node:path"
@@ -18,18 +23,36 @@ import { WebSocketServerAdapter } from "@automerge/automerge-repo-network-websoc
 import { NodeFSStorageAdapter } from "@automerge/automerge-repo-storage-nodefs"
 import { WebSocketServer } from "ws"
 
-const port = Number(process.env.AUTOMERGE_SYNC_PORT ?? "3030")
-const dataDir = resolve(
-  process.env.AUTOMERGE_SYNC_DATA ?? ".data/automerge-sync",
-)
-
-if (!Number.isInteger(port) || port < 1 || port > 65535) {
-  throw new Error(`Invalid AUTOMERGE_SYNC_PORT: ${process.env.AUTOMERGE_SYNC_PORT}`)
+function resolvePort(): number {
+  const raw =
+    process.env.PORT?.trim() ||
+    process.env.AUTOMERGE_SYNC_PORT?.trim() ||
+    "3030"
+  const port = Number(raw)
+  if (!Number.isInteger(port) || port < 1 || port > 65535) {
+    throw new Error(
+      `Invalid PORT / AUTOMERGE_SYNC_PORT: ${raw}`,
+    )
+  }
+  return port
 }
+
+function resolveDataDir(): string {
+  const volumeRoot = process.env.RAILWAY_VOLUME_MOUNT_PATH?.trim()
+  if (volumeRoot) {
+    return resolve(volumeRoot, "automerge-sync")
+  }
+  return resolve(
+    process.env.AUTOMERGE_SYNC_DATA ?? ".data/automerge-sync",
+  )
+}
+
+const port = resolvePort()
+const dataDir = resolveDataDir()
 
 mkdirSync(dataDir, { recursive: true })
 
-const wss = new WebSocketServer({ port })
+const wss = new WebSocketServer({ port, host: "0.0.0.0" })
 const adapter = new WebSocketServerAdapter(wss)
 
 const repo = new Repo({
@@ -41,11 +64,13 @@ const repo = new Repo({
 })
 
 wss.on("listening", () => {
-  console.log(`[automerge-sync] listening on ws://127.0.0.1:${port}`)
+  console.log(`[automerge-sync] listening on 0.0.0.0:${port}`)
   console.log(`[automerge-sync] data dir: ${dataDir}`)
-  console.log(
-    `[automerge-sync] set NEXT_PUBLIC_AUTOMERGE_SYNC_URL=ws://127.0.0.1:${port}`,
-  )
+  if (!process.env.RAILWAY_ENVIRONMENT) {
+    console.log(
+      `[automerge-sync] set NEXT_PUBLIC_AUTOMERGE_SYNC_URL=ws://127.0.0.1:${port}`,
+    )
+  }
 })
 
 wss.on("error", (err) => {

@@ -34,7 +34,7 @@ If notes or descriptions need collaborative rich text, use Automerge’s ProseMi
 | --- | --- |
 | Browser storage | IndexedDB (`nancyfi-automerge`) |
 | Same-browser tabs | BroadcastChannel |
-| Cross-browser / devices (dev) | WebSocket client → `bun run sync` (NodeFS on disk) |
+| Cross-browser / devices | WebSocket client → Automerge sync peer (NodeFS) |
 
 ### Local sync server
 
@@ -52,8 +52,18 @@ bun run dev
 
 Env: `AUTOMERGE_SYNC_PORT`, `AUTOMERGE_SYNC_DATA`, `NEXT_PUBLIC_AUTOMERGE_SYNC_URL` (see `.env.example`). Work: [NAN-30](https://linear.app/nancyfi/issue/NAN-30/automerge-websocket-sync-server-cross-browser).
 
+### Production sync server (Railway)
+
+Service `automerge-sync` in the nancyfi Railway project:
+
+- Start: `bun run sync` (`features/budgets/repo/sync-server.ts`)
+- Binds Railway `PORT` (falls back to `AUTOMERGE_SYNC_PORT` locally)
+- Persists under the attached volume (`RAILWAY_VOLUME_MOUNT_PATH/automerge-sync`)
+- Public URL → set on the web app as `NEXT_PUBLIC_AUTOMERGE_SYNC_URL=wss://…` (rebuild required; `NEXT_PUBLIC_*` is build-time)
+
+Work: [NAN-32](https://linear.app/nancyfi/issue/NAN-32/deploy-automerge-sync-server-on-railway).
+
 ## Open decisions
 
-- Auth / encryption boundaries relative to CRDT payloads (v1 sync is unauthenticated local-dev).
+- Auth / encryption boundaries relative to CRDT payloads (v1 sync is unauthenticated).
 - What lives in Automerge vs relational/auth systems (accounts, invites metadata, billing).
-- Production hosting of the sync peer (Railway / sidecar with the Next app).

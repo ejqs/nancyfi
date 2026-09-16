@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "sync": "bun --env-file=.env.local run features/budgets/repo/sync-server.ts",
+    "sync": "bun run features/budgets/repo/sync-server.ts",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
