@@ -11,16 +11,24 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { authClient } from "@/lib/auth-client"
-import { BudgetListPanel } from "@/features/budgets/components/budget-list-panel"
-import { SyncStatusIndicator } from "@/features/budgets/components/sync-status-indicator"
-import { BudgetRepoProvider } from "@/features/budgets/repo/repo-provider"
 
-export function Dashboard({
-  name,
-  email,
+import type { BudgetMembershipRole } from "../db/schema"
+import { BudgetRepoProvider } from "../repo/repo-provider"
+import { SyncStatusIndicator } from "./sync-status-indicator"
+import { BudgetWorkspace } from "./budget-workspace"
+
+export function BudgetDetailClient({
+  budgetId,
+  automergeUrl,
+  role,
+  catalogName,
+  userName,
 }: {
-  name: string
-  email: string
+  budgetId: string
+  automergeUrl: string
+  role: BudgetMembershipRole
+  catalogName: string
+  userName: string
 }) {
   const router = useRouter()
 
@@ -43,23 +51,31 @@ export function Dashboard({
         </header>
 
         <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-6 pb-16">
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-1">
             <h1 className="text-2xl font-semibold tracking-tight">
-              Welcome back{name ? `, ${name}` : ""}
+              {catalogName}
             </h1>
-            <p className="text-sm text-muted-foreground">{email}</p>
+            <p className="text-sm text-muted-foreground">
+              {userName ? `${userName} · ` : ""}
+              Collaborative budget document
+            </p>
           </div>
 
-          <Card className="max-w-lg">
+          <Card>
             <CardHeader>
-              <CardTitle>Your budgets</CardTitle>
+              <CardTitle>Budget</CardTitle>
               <CardDescription>
-                Create and open budgets you own or contribute to. Membership
-                lives on the server; content syncs locally with Automerge.
+                Edits sync locally via Automerge. Membership and archive are
+                enforced on the server.
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <BudgetListPanel />
+              <BudgetWorkspace
+                budgetId={budgetId}
+                automergeUrl={automergeUrl}
+                role={role}
+                catalogName={catalogName}
+              />
             </CardContent>
           </Card>
         </main>
