@@ -2,7 +2,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
@@ -42,12 +41,6 @@ export function AuthShell({
           <CardDescription className="text-balance">{description}</CardDescription>
         </CardHeader>
         <CardContent>{children}</CardContent>
-        <CardFooter className="justify-center text-center">
-          <p className="text-xs/relaxed text-muted-foreground text-balance">
-            By using Nancyfi, you agree to our Terms of Service & Privacy
-            Policy.
-          </p>
-        </CardFooter>
       </Card>
     </div>
   )

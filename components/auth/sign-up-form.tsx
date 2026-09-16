@@ -92,7 +92,14 @@ export function SignUpForm({ nextPath }: { nextPath?: string }) {
               required
               minLength={8}
               aria-invalid={!!error || undefined}
+              aria-describedby="password-hint"
             />
+            <p
+              id="password-hint"
+              className="text-xs text-muted-foreground"
+            >
+              At least 8 characters.
+            </p>
             {error ? <FieldError>{error}</FieldError> : null}
           </Field>
         </FieldGroup>
