@@ -16,18 +16,28 @@ A budget is the thing a person (or group) plans and tracks money against. One us
 
 | Surface | Path / component |
 | --- | --- |
+| App shell (sidebar + sticky header) | `components/app-shell.tsx` — desktop sidebar, mobile drawer |
 | Budget list + create | Dashboard (`BudgetListPanel`) — membership-backed |
-| Open / rename / archive | `/budgets/[budgetId]` (`BudgetWorkspace`) |
-| Members + invites | `MembersPanel` on budget workspace (owner invite by email; revoke / leave) |
-| Accept invite | `/invites/[token]` |
-| Accounts create/edit | `AccountsPanel` on budget workspace (kind + optional parent) |
-| Plans + templates | `PlansPanel` — kernel kinds, catalog seed, propose Entries, cancel |
-| Entries create / void | `EntriesPanel` — simple from/to/amount form → balancing postings; void (no hard-delete) |
+| Open / rename / archive | `/budgets/[budgetId]` (`BudgetWorkspace` + settings panel) |
+| Primary jobs | Home · Payday · Recurring · Transactions (one navigation control per viewport) |
+| Grouped settings | Money & categories · People · Advanced data · Budget |
+| Members + invites | Settings → People (`MembersPanel`; owner invite by email; Copy link; revoke / leave) |
+| Accept invite | `/invites/[token]` (Sign out on email mismatch) |
+| Transactions | Expense · Income · Transfer task form; dense transaction rows |
+| Recurring | Salary · Bill/subscription · Debt repayment · Savings task form |
+| Payday | Prepare occurrence, adjust actual salary, review, confirm |
+| Advanced data | Primitive Accounts / Entries / Plans and templates |
 | Local CRDT store | `BudgetRepoProvider` + `createBudgetInRepo` |
+| Automerge sync (dev) | `bun run sync` + `NEXT_PUBLIC_AUTOMERGE_SYNC_URL` (WebSocket) |
 
 Create flow: client imports schema-init bytes into Automerge Repo, then `createBudgetAction` registers catalog + owner membership. Rename updates CRDT `name` and catalog `budget.name`. Archive sets control-plane `status = archived` (owner only).
 
-Accounts, Plans, and Entries mutate the local Automerge doc via draft-safe `apply*` helpers (`applyUpsertAccount` / `applyUpsertPlan` / `applyUpsertEntry` / `applyProposePlanOccurrences`, etc.). Catalog Plan templates copy into `planTemplatesById` via `applySeedCatalogPlanTemplates`.
+Accounts, Plans, and Entries mutate the local Automerge doc via draft-safe `apply*` helpers. Catalog Plan templates copy into `planTemplatesById` via `applySeedCatalogPlanTemplates`. Posted balances use `accountPostedBalanceMinor` / `listAccountBalances`.
+
+Default creation uses scenario-safe task commands. Those commands atomically
+create or validate the Accounts, Entries, Plans, and schedules needed for the
+user's job. Primitive editors remain available under Advanced data; they are
+not the default onboarding path.
 
 ## Requirements (feature)
 
@@ -42,6 +52,10 @@ Accounts, Plans, and Entries mutate the local Automerge doc via draft-safe `appl
 
 1. Sensible empty state for a new budget (initialize schema once — see Automerge [modeling data](https://automerge.org/docs/cookbook/modeling-data/)).
 2. Show membership / who has access at a glance.
+3. Normal flows do not require Account-kind, posting-direction, lifecycle
+   status, or occurrence-count decisions.
+4. Incomplete legacy scenario data is visibly repairable and never presented
+   as a valid debt/subscription result.
 
 ### Could
 

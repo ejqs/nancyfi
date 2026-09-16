@@ -24,6 +24,26 @@ Dense, calm, keyboard-friendly. One composition: **narrow sidebar + main list/bo
 
 Prefer progressive disclosure: simple default list; filters and columns behind view options.
 
+## Task language over ledger language
+
+The ledger remains Accounts + balanced Entries + Plans, but normal product
+flows begin with the person's job:
+
+- **Transaction:** Expense, Income, or Transfer
+- **Recurring item:** Salary, Bill or subscription, Debt repayment, or Savings
+- **Payday:** Prepare → review actual salary and commitments → Confirm
+
+Use **transaction**, **recurring item**, **needs review**, **prepare**,
+**confirm**, and **undo transaction** in default UI. Keep Entry, Plan, proposed,
+post, void, Account kinds, posting direction, and occurrence count in advanced
+data views only.
+
+Task commands must create or validate the complete primitive set atomically.
+For example, adding debt requires a liability Account and a repayment Plan;
+the UI must not permit a repayment Plan linked only between asset Accounts.
+Incomplete legacy setup is shown as **Finish setup**, not as a valid zero-value
+row.
+
 ## Row anatomy (lists)
 
 Left → right, keep secondary metadata muted:
@@ -48,8 +68,9 @@ Mirror Linear Preferences: **grouped settings sidebar** + **main pane of setting
 | Group | Examples |
 | --- | --- |
 | **Personal** | Preferences, profile, notifications, security, DisplayProfile defaults, font/density |
-| **Budget** (shared) | Members/invites, household default Lenses, soft label suggestions |
-| **Money model** | Account hierarchy helpers, **Labels**, **Plan templates**, statuses if any |
+| **Budget** (shared) | General configuration, members/invites, household default Lenses |
+| **Money & categories** | Money locations, categories, account hierarchy helpers, **Labels** |
+| **Advanced data** | Primitive Accounts, Entries, Plan templates, statuses if any |
 | **Automation** | Rules catalog apply, MCP / email (later) |
 | **Features** | Experimental toggles |
 
@@ -220,6 +241,9 @@ Theme (light vs dark) is a product choice — Linear’s *structure* matters mor
 ## Anti-patterns
 
 - Dashboard of metric cards as the primary budget surface
+- Duplicate sidebar and tab navigation for the same primary destinations
+- Generic create forms that ask users for kernel kind, posting direction, or lifecycle status
+- Scenario rows that look complete while required linked primitives are missing
 - Card-per-Entry as the default list (cards OK for focused single-item detail)
 - Rainbow pill clusters or emoji as primary category system
 - Hiding status only in prose with no scanable icon/column
@@ -237,5 +261,8 @@ Theme (light vs dark) is a product choice — Linear’s *structure* matters mor
 - Prefer shared **catalog list** primitives for Labels and Plan templates (filter, New, groups, row + `⋯`).
 - Prefer a shared **command palette** (`⌘/Ctrl K`) + keymap registry; pickers reuse it.
 - Wire grouping and tabs to Lenses when [NAN-20](https://linear.app/nancyfi/issue/NAN-20/lenses-and-displayprofiles-household-default-personal) lands; until then, hard-code a Linear-like shell that can later bind to Lens configs.
+- Use one primary navigation control per viewport: Home, Payday, Recurring,
+  Transactions. Work:
+  [NAN-31](https://linear.app/nancyfi/issue/NAN-31/simplify-core-money-flow-with-scenario-safe-tasks).
 - Budget setup (labels, templates, household Lens defaults) should feel like Linear’s Issues/Projects settings sections — structured catalogs, not freeform schema editors.
 - App-level workspace settings (profile, members-at-workspace if any, billing later) stay separate from per-budget Money model settings.

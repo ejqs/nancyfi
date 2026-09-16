@@ -7,12 +7,20 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 
+import { formatMinor, parseMajorToMinor } from "../money-format"
 import {
   applyUpsertEntry,
   applyVoidEntry,
   buildBalancingPostings,
 } from "../mutations"
 import type { Account, BudgetDoc, Entry, EntryStatus } from "../types"
+import {
+  ListRow,
+  RowActions,
+  RowMeta,
+  RowTitle,
+  StatusDot,
+} from "./list-row"
 
 const selectClassName =
   "h-7 w-full min-w-0 rounded-md border border-input bg-input/20 px-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 disabled:opacity-50 dark:bg-input/30"
@@ -20,27 +28,6 @@ const selectClassName =
 type EntriesPanelProps = {
   doc: BudgetDoc
   changeDoc: (changeFn: ChangeFn<BudgetDoc>) => void
-}
-
-function parseMajorToMinor(raw: string): number {
-  const trimmed = raw.trim()
-  if (!/^\d+(\.\d{1,2})?$/.test(trimmed)) {
-    throw new Error("Amount must be a positive number with up to 2 decimals")
-  }
-  const [whole, frac = ""] = trimmed.split(".")
-  const minor = Number(whole) * 100 + Number((frac + "00").slice(0, 2))
-  if (!Number.isInteger(minor) || minor <= 0) {
-    throw new Error("Amount must be greater than zero")
-  }
-  return minor
-}
-
-function formatMinor(amountMinor: number, currency: string): string {
-  const sign = amountMinor < 0 ? "-" : ""
-  const abs = Math.abs(amountMinor)
-  const major = Math.floor(abs / 100)
-  const cents = String(abs % 100).padStart(2, "0")
-  return `${sign}${major}.${cents} ${currency}`
 }
 
 function todayLocalDate(): string {
@@ -70,6 +57,7 @@ export function EntriesPanel({ doc, changeDoc }: EntriesPanelProps) {
     .sort((a, b) => a.name.localeCompare(b.name))
   const entries = sortEntries(Object.values(doc.entriesById ?? {}))
 
+  const [showForm, setShowForm] = useState(false)
   const [description, setDescription] = useState("")
   const [effectiveDate, setEffectiveDate] = useState(todayLocalDate)
   const [amount, setAmount] = useState("")
@@ -86,6 +74,7 @@ export function EntriesPanel({ doc, changeDoc }: EntriesPanelProps) {
     setToAccountId("")
     setStatus("posted")
     setError(null)
+    setShowForm(false)
   }
 
   function handleSubmit(event: React.FormEvent) {
@@ -131,7 +120,7 @@ export function EntriesPanel({ doc, changeDoc }: EntriesPanelProps) {
     if (entry.status === "void") return
     if (
       !window.confirm(
-        `Void “${entry.description}”? Posted history is kept; it is not deleted.`,
+        `Void “${entry.description}”? History is kept; it is not deleted.`,
       )
     ) {
       return
@@ -175,120 +164,135 @@ export function EntriesPanel({ doc, changeDoc }: EntriesPanelProps) {
   }
 
   return (
-    <section className="flex flex-col gap-4 border-t border-border pt-6">
-      <div>
-        <h2 className="text-sm font-medium text-foreground">Entries</h2>
-        <p className="text-xs text-muted-foreground">
-          Simple amount + accounts form generates a balanced posting pair.
-          Void posted history instead of deleting.
-        </p>
+    <section className="flex flex-col gap-4">
+      <div className="flex items-start justify-between gap-2">
+        <div>
+          <h2 className="text-sm font-medium text-foreground">Activity</h2>
+          <p className="text-xs text-muted-foreground">
+            Record money moving between accounts. Confirm proposed items when
+            ready.
+          </p>
+        </div>
+        <Button
+          type="button"
+          size="sm"
+          onClick={() => setShowForm(true)}
+          disabled={activeAccounts.length < 2}
+        >
+          + Entry
+        </Button>
       </div>
 
-      <form
-        onSubmit={handleSubmit}
-        className="flex flex-col gap-3 rounded-md border border-border p-3"
-      >
-        <p className="text-xs font-medium text-foreground">New entry</p>
-        {activeAccounts.length < 2 ? (
-          <p className="text-xs text-muted-foreground">
-            Add at least two accounts before creating an entry.
-          </p>
-        ) : (
-          <>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="flex flex-col gap-1.5 sm:col-span-2">
-                <Label htmlFor="entry-description">Description</Label>
-                <Input
-                  id="entry-description"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  autoComplete="off"
-                  placeholder="Market run, paycheck…"
-                />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="entry-date">Date</Label>
-                <Input
-                  id="entry-date"
-                  type="date"
-                  value={effectiveDate}
-                  onChange={(e) => setEffectiveDate(e.target.value)}
-                />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="entry-amount">
-                  Amount ({doc.defaultCurrency})
-                </Label>
-                <Input
-                  id="entry-amount"
-                  inputMode="decimal"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  placeholder="250.00"
-                  autoComplete="off"
-                />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="entry-from">From account</Label>
-                <select
-                  id="entry-from"
-                  className={selectClassName}
-                  value={fromAccountId}
-                  onChange={(e) => setFromAccountId(e.target.value)}
-                >
-                  <option value="">Select…</option>
-                  {activeAccounts.map((account) => (
-                    <option key={account.id} value={account.id}>
-                      {account.name} ({account.kind})
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="entry-to">To account</Label>
-                <select
-                  id="entry-to"
-                  className={selectClassName}
-                  value={toAccountId}
-                  onChange={(e) => setToAccountId(e.target.value)}
-                >
-                  <option value="">Select…</option>
-                  {activeAccounts.map((account) => (
-                    <option key={account.id} value={account.id}>
-                      {account.name} ({account.kind})
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="flex flex-col gap-1.5 sm:col-span-2">
-                <Label htmlFor="entry-status">Status</Label>
-                <select
-                  id="entry-status"
-                  className={selectClassName}
-                  value={status}
-                  onChange={(e) =>
-                    setStatus(e.target.value as Exclude<EntryStatus, "void">)
-                  }
-                >
-                  <option value="posted">Posted</option>
-                  <option value="proposed">Proposed</option>
-                </select>
-              </div>
+      {activeAccounts.length < 2 ? (
+        <p className="text-xs text-muted-foreground">
+          Add at least two accounts before creating an entry.
+        </p>
+      ) : null}
+
+      {showForm ? (
+        <form
+          onSubmit={handleSubmit}
+          className="flex flex-col gap-3 rounded-md border border-border p-3"
+        >
+          <p className="text-xs font-medium text-foreground">New entry</p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="flex flex-col gap-1.5 sm:col-span-2">
+              <Label htmlFor="entry-description">Description</Label>
+              <Input
+                id="entry-description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                autoComplete="off"
+                placeholder="Market run, paycheck…"
+              />
             </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="entry-date">Date</Label>
+              <Input
+                id="entry-date"
+                type="date"
+                value={effectiveDate}
+                onChange={(e) => setEffectiveDate(e.target.value)}
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="entry-amount">
+                Amount ({doc.defaultCurrency})
+              </Label>
+              <Input
+                id="entry-amount"
+                inputMode="decimal"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder="250.00"
+                autoComplete="off"
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="entry-from">From account</Label>
+              <select
+                id="entry-from"
+                className={selectClassName}
+                value={fromAccountId}
+                onChange={(e) => setFromAccountId(e.target.value)}
+              >
+                <option value="">Select…</option>
+                {activeAccounts.map((account) => (
+                  <option key={account.id} value={account.id}>
+                    {account.name} ({account.kind})
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="entry-to">To account</Label>
+              <select
+                id="entry-to"
+                className={selectClassName}
+                value={toAccountId}
+                onChange={(e) => setToAccountId(e.target.value)}
+              >
+                <option value="">Select…</option>
+                {activeAccounts.map((account) => (
+                  <option key={account.id} value={account.id}>
+                    {account.name} ({account.kind})
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex flex-col gap-1.5 sm:col-span-2">
+              <Label htmlFor="entry-status">Status</Label>
+              <select
+                id="entry-status"
+                className={selectClassName}
+                value={status}
+                onChange={(e) =>
+                  setStatus(e.target.value as Exclude<EntryStatus, "void">)
+                }
+              >
+                <option value="posted">Posted</option>
+                <option value="proposed">Proposed</option>
+              </select>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2">
             <Button type="submit">Create entry</Button>
-          </>
-        )}
-        {error ? (
-          <p className="text-sm text-destructive" role="alert">
-            {error}
-          </p>
-        ) : null}
-      </form>
+            <Button type="button" variant="ghost" onClick={resetForm}>
+              Cancel
+            </Button>
+          </div>
+          {error ? (
+            <p className="text-sm text-destructive" role="alert">
+              {error}
+            </p>
+          ) : null}
+        </form>
+      ) : null}
 
       {entries.length === 0 ? (
         <p className="text-xs text-muted-foreground">No entries yet.</p>
       ) : (
-        <ul className="flex flex-col gap-2">
+        <div className="rounded-md border border-border/80">
           {entries.map((entry) => {
             const first = entry.postings[0]
             const second = entry.postings[1]
@@ -300,25 +304,25 @@ export function EntriesPanel({ doc, changeDoc }: EntriesPanelProps) {
                   )
                 : "—"
             return (
-              <li
-                key={entry.id}
-                className="flex flex-wrap items-start justify-between gap-2 rounded-md border border-border px-3 py-2"
-              >
-                <div className="min-w-0">
-                  <p className="text-sm text-foreground">
-                    {entry.description}
-                    <span className="ml-2 text-xs capitalize text-muted-foreground">
-                      {entry.status}
-                    </span>
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {entry.effectiveAt.slice(0, 10)} · {amountLabel}
-                    {first && second
-                      ? ` · ${accountLabel(doc.accountsById, first.accountId)} → ${accountLabel(doc.accountsById, second.accountId)}`
-                      : ""}
-                  </p>
-                </div>
-                <div className="flex gap-1">
+              <ListRow key={entry.id}>
+                <StatusDot
+                  tone={
+                    entry.status === "proposed"
+                      ? "proposed"
+                      : entry.status === "void"
+                        ? "void"
+                        : "posted"
+                  }
+                  label={entry.status}
+                />
+                <RowTitle>{entry.description}</RowTitle>
+                <RowMeta>
+                  {entry.effectiveAt.slice(0, 10)} · {amountLabel}
+                  {first && second
+                    ? ` · ${accountLabel(doc.accountsById, first.accountId)} → ${accountLabel(doc.accountsById, second.accountId)}`
+                    : ""}
+                </RowMeta>
+                <RowActions>
                   {entry.status === "proposed" ? (
                     <Button
                       type="button"
@@ -339,11 +343,11 @@ export function EntriesPanel({ doc, changeDoc }: EntriesPanelProps) {
                       Void
                     </Button>
                   ) : null}
-                </div>
-              </li>
+                </RowActions>
+              </ListRow>
             )
           })}
-        </ul>
+        </div>
       )}
     </section>
   )

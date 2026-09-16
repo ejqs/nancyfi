@@ -95,9 +95,9 @@ export function MembersPanel({
         setNotice(`Invite sent to ${result.data.email}.`)
       } else {
         setNotice(
-          `Invite created for ${result.data.email}. Email not sent${
+          `Invite created for ${result.data.email}. Email was not sent${
             result.data.emailError ? ` (${result.data.emailError})` : ""
-          }. Share this link: ${result.data.acceptUrl}`,
+          }. Copy the link from pending invites below.`,
         )
       }
       await refresh()
@@ -115,6 +115,16 @@ export function MembersPanel({
       }
       await refresh()
     })
+  }
+
+  async function handleCopyInvite(url: string) {
+    try {
+      await navigator.clipboard.writeText(url)
+      setNotice("Invite link copied.")
+      setError(null)
+    } catch {
+      setError("Could not copy link. Select it manually.")
+    }
   }
 
   function handleRevoke(targetUserId: string, name: string) {
@@ -158,11 +168,11 @@ export function MembersPanel({
   }
 
   return (
-    <section className="flex flex-col gap-4 border-t border-border pt-4">
+    <section className="flex flex-col gap-4">
       <div>
         <h2 className="text-sm font-medium text-foreground">People</h2>
         <p className="text-xs text-muted-foreground">
-          Membership is enforced on the server. Invites grant contributor access.
+          Invite people to edit this budget with you.
         </p>
       </div>
 
@@ -240,21 +250,32 @@ export function MembersPanel({
                     key={invite.id}
                     className="flex flex-wrap items-center justify-between gap-2 text-sm"
                   >
-                    <div>
+                    <div className="min-w-0">
                       <p>{invite.email}</p>
-                      <p className="break-all text-xs text-muted-foreground">
-                        {invite.acceptUrl}
+                      <p className="text-xs text-muted-foreground">
+                        Link ready to share
                       </p>
                     </div>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      disabled={pending}
-                      onClick={() => handleCancelInvite(invite.id)}
-                    >
-                      Cancel
-                    </Button>
+                    <div className="flex gap-1">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        disabled={pending}
+                        onClick={() => void handleCopyInvite(invite.acceptUrl)}
+                      >
+                        Copy link
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        disabled={pending}
+                        onClick={() => handleCancelInvite(invite.id)}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
                   </li>
                 ))}
               </ul>

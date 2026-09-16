@@ -7,8 +7,17 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 
+import { listAccountBalances } from "../balances"
+import { formatMinor } from "../money-format"
 import { applyUpsertAccount } from "../mutations"
 import type { Account, AccountKind, BudgetDoc } from "../types"
+import {
+  ListRow,
+  RowActions,
+  RowMeta,
+  RowTitle,
+  StatusDot,
+} from "./list-row"
 
 const ACCOUNT_KINDS: AccountKind[] = [
   "asset",
@@ -34,6 +43,11 @@ function sortAccounts(accounts: Account[]): Account[] {
 
 export function AccountsPanel({ doc, changeDoc }: AccountsPanelProps) {
   const accounts = sortAccounts(Object.values(doc.accountsById ?? {}))
+  const balances = listAccountBalances(doc)
+  const balanceById = new Map(
+    balances.map((row) => [row.account.id, row] as const),
+  )
+  const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [name, setName] = useState("")
   const [kind, setKind] = useState<AccountKind>("asset")
@@ -46,6 +60,16 @@ export function AccountsPanel({ doc, changeDoc }: AccountsPanelProps) {
     setKind("asset")
     setParentId("")
     setError(null)
+    setShowForm(false)
+  }
+
+  function startCreate() {
+    setEditingId(null)
+    setName("")
+    setKind("asset")
+    setParentId("")
+    setError(null)
+    setShowForm(true)
   }
 
   function startEdit(account: Account) {
@@ -54,6 +78,7 @@ export function AccountsPanel({ doc, changeDoc }: AccountsPanelProps) {
     setKind(account.kind)
     setParentId(account.parentId ?? "")
     setError(null)
+    setShowForm(true)
   }
 
   function handleSubmit(event: React.FormEvent) {
@@ -114,113 +139,121 @@ export function AccountsPanel({ doc, changeDoc }: AccountsPanelProps) {
   )
 
   return (
-    <section className="flex flex-col gap-4 border-t border-border pt-6">
-      <div>
-        <h2 className="text-sm font-medium text-foreground">Accounts</h2>
-        <p className="text-xs text-muted-foreground">
-          Containers and category hierarchy (asset, liability, income, expense).
-        </p>
+    <section className="flex flex-col gap-4">
+      <div className="flex items-start justify-between gap-2">
+        <div>
+          <h2 className="text-sm font-medium text-foreground">Accounts</h2>
+          <p className="text-xs text-muted-foreground">
+            Where money lives — cash, cards, income, and spending categories.
+          </p>
+        </div>
+        <Button type="button" size="sm" onClick={startCreate}>
+          + Account
+        </Button>
       </div>
 
-      <form
-        onSubmit={handleSubmit}
-        className="flex flex-col gap-3 rounded-md border border-border p-3"
-      >
-        <p className="text-xs font-medium text-foreground">
-          {editingId ? "Edit account" : "New account"}
-        </p>
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="account-name">Name</Label>
-            <Input
-              id="account-name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              autoComplete="off"
-              placeholder="Checking, Groceries…"
-            />
+      {showForm ? (
+        <form
+          onSubmit={handleSubmit}
+          className="flex flex-col gap-3 rounded-md border border-border p-3"
+        >
+          <p className="text-xs font-medium text-foreground">
+            {editingId ? "Edit account" : "New account"}
+          </p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="account-name">Name</Label>
+              <Input
+                id="account-name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                autoComplete="off"
+                placeholder="Checking, Groceries…"
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="account-kind">Type</Label>
+              <select
+                id="account-kind"
+                className={selectClassName}
+                value={kind}
+                onChange={(e) => {
+                  setKind(e.target.value as AccountKind)
+                  setParentId("")
+                }}
+              >
+                {ACCOUNT_KINDS.map((value) => (
+                  <option key={value} value={value}>
+                    {value}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex flex-col gap-1.5 sm:col-span-2">
+              <Label htmlFor="account-parent">Parent (optional)</Label>
+              <select
+                id="account-parent"
+                className={selectClassName}
+                value={parentId}
+                onChange={(e) => setParentId(e.target.value)}
+              >
+                <option value="">None</option>
+                {parentOptions.map((account) => (
+                  <option key={account.id} value={account.id}>
+                    {account.name}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="account-kind">Kind</Label>
-            <select
-              id="account-kind"
-              className={selectClassName}
-              value={kind}
-              onChange={(e) => {
-                setKind(e.target.value as AccountKind)
-                setParentId("")
-              }}
-            >
-              {ACCOUNT_KINDS.map((value) => (
-                <option key={value} value={value}>
-                  {value}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="flex flex-col gap-1.5 sm:col-span-2">
-            <Label htmlFor="account-parent">Parent (optional)</Label>
-            <select
-              id="account-parent"
-              className={selectClassName}
-              value={parentId}
-              onChange={(e) => setParentId(e.target.value)}
-            >
-              <option value="">None</option>
-              {parentOptions.map((account) => (
-                <option key={account.id} value={account.id}>
-                  {account.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Button type="submit">{editingId ? "Save account" : "Add account"}</Button>
-          {editingId ? (
+          <div className="flex flex-wrap gap-2">
+            <Button type="submit">
+              {editingId ? "Save account" : "Add account"}
+            </Button>
             <Button type="button" variant="ghost" onClick={resetForm}>
               Cancel
             </Button>
+          </div>
+          {error ? (
+            <p className="text-sm text-destructive" role="alert">
+              {error}
+            </p>
           ) : null}
-        </div>
-        {error ? (
-          <p className="text-sm text-destructive" role="alert">
-            {error}
-          </p>
-        ) : null}
-      </form>
+        </form>
+      ) : null}
 
       {accounts.length === 0 ? (
-        <p className="text-xs text-muted-foreground">No accounts yet.</p>
+        <p className="text-xs text-muted-foreground">
+          No accounts yet. Add one to start recording money.
+        </p>
       ) : (
-        <ul className="flex flex-col gap-2">
+        <div className="rounded-md border border-border/80">
           {accounts.map((account) => {
             const parentName = account.parentId
               ? doc.accountsById[account.parentId]?.name
               : null
+            const balance = balanceById.get(account.id)
             return (
-              <li
-                key={account.id}
-                className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-border px-3 py-2"
-              >
-                <div className="min-w-0">
-                  <p className="truncate text-sm text-foreground">
-                    {account.name}
-                    {account.status === "archived" ? (
-                      <span className="ml-2 text-xs text-muted-foreground">
-                        archived
-                      </span>
-                    ) : null}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {account.kind}
-                    {parentName ? ` · under ${parentName}` : ""}
-                  </p>
-                </div>
-                <div className="flex gap-1">
+              <ListRow key={account.id}>
+                <StatusDot
+                  tone={account.status === "active" ? "active" : "muted"}
+                  label={account.kind}
+                />
+                <RowTitle>
+                  {account.name}
+                  {account.status === "archived" ? " (archived)" : ""}
+                </RowTitle>
+                <RowMeta>
+                  {account.kind}
+                  {parentName ? ` · ${parentName}` : ""}
+                  {balance
+                    ? ` · ${formatMinor(balance.balanceMinor, balance.currency)}`
+                    : ""}
+                </RowMeta>
+                <RowActions>
                   <Button
                     type="button"
-                    variant="outline"
+                    variant="ghost"
                     size="sm"
                     onClick={() => startEdit(account)}
                   >
@@ -236,11 +269,11 @@ export function AccountsPanel({ doc, changeDoc }: AccountsPanelProps) {
                       Archive
                     </Button>
                   ) : null}
-                </div>
-              </li>
+                </RowActions>
+              </ListRow>
             )
           })}
-        </ul>
+        </div>
       )}
     </section>
   )

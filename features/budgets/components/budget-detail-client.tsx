@@ -1,21 +1,21 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 
+import { AppShell } from "@/components/app-shell"
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
 import { authClient } from "@/lib/auth-client"
 
+import { listBudgetsAction, type BudgetListItem } from "../actions"
 import type { BudgetMembershipRole } from "../db/schema"
 import { BudgetRepoProvider } from "../repo/repo-provider"
 import { SyncStatusIndicator } from "./sync-status-indicator"
-import { BudgetWorkspace } from "./budget-workspace"
+import {
+  BudgetWorkspace,
+  WORKSPACE_SECTIONS,
+  type WorkspaceSection,
+} from "./budget-workspace"
 
 export function BudgetDetailClient({
   budgetId,
@@ -33,6 +33,19 @@ export function BudgetDetailClient({
   userId: string
 }) {
   const router = useRouter()
+  const [section, setSection] = useState<WorkspaceSection>("home")
+  const [budgets, setBudgets] = useState<BudgetListItem[]>([])
+
+  useEffect(() => {
+    let cancelled = false
+    void listBudgetsAction().then((result) => {
+      if (cancelled || !result.ok) return
+      setBudgets(result.data)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [budgetId])
 
   async function handleSignOut() {
     await authClient.signOut()
@@ -41,48 +54,40 @@ export function BudgetDetailClient({
 
   return (
     <BudgetRepoProvider>
-      <div className="flex flex-1 flex-col">
-        <header className="mx-auto flex w-full max-w-5xl items-center justify-between px-6 py-5">
-          <p className="text-sm font-semibold tracking-tight">Nancyfi</p>
-          <div className="flex items-center gap-3">
+      <AppShell
+        title={catalogName}
+        subtitle={userName ? `${userName} · Shared budget` : "Shared budget"}
+        budgets={budgets.map((budget) => ({
+          id: budget.id,
+          name: budget.name,
+          href: `/budgets/${budget.id}`,
+          active: budget.id === budgetId,
+        }))}
+        sectionNav={WORKSPACE_SECTIONS.map((item) => ({
+          id: item.id,
+          label: item.label,
+          active: item.id === section,
+          onSelect: () => setSection(item.id),
+        }))}
+        headerActions={
+          <>
             <SyncStatusIndicator />
             <Button variant="ghost" size="sm" onClick={handleSignOut}>
               Sign out
             </Button>
-          </div>
-        </header>
-
-        <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-6 pb-16">
-          <div className="flex flex-col gap-1">
-            <h1 className="text-2xl font-semibold tracking-tight">
-              {catalogName}
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              {userName ? `${userName} · ` : ""}
-              Collaborative budget document
-            </p>
-          </div>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Budget</CardTitle>
-              <CardDescription>
-                Edits sync locally via Automerge. Membership and archive are
-                enforced on the server.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <BudgetWorkspace
-                budgetId={budgetId}
-                automergeUrl={automergeUrl}
-                role={role}
-                catalogName={catalogName}
-                currentUserId={userId}
-              />
-            </CardContent>
-          </Card>
-        </main>
-      </div>
+          </>
+        }
+      >
+        <BudgetWorkspace
+          budgetId={budgetId}
+          automergeUrl={automergeUrl}
+          role={role}
+          catalogName={catalogName}
+          currentUserId={userId}
+          section={section}
+          onSectionChange={setSection}
+        />
+      </AppShell>
     </BudgetRepoProvider>
   )
 }

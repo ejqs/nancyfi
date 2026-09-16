@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label"
 
 import { applySeedCatalogPlanTemplates } from "../catalog-plan-templates"
 import { money } from "../document"
+import { formatMinor, parseMajorToMinor } from "../money-format"
 import {
   applyCancelPlan,
   applyCreatePlanFromTemplate,
@@ -27,6 +28,13 @@ import type {
   PlanTemplate,
   Schedule,
 } from "../types"
+import {
+  ListRow,
+  RowActions,
+  RowMeta,
+  RowTitle,
+  StatusDot,
+} from "./list-row"
 
 const PLAN_KINDS: PlanKind[] = [
   "income",
@@ -49,26 +57,6 @@ const selectClassName =
 type PlansPanelProps = {
   doc: BudgetDoc
   changeDoc: (changeFn: ChangeFn<BudgetDoc>) => void
-}
-
-function parseMajorToMinor(raw: string): number {
-  const trimmed = raw.trim()
-  if (!/^\d+(\.\d{1,2})?$/.test(trimmed)) {
-    throw new Error("Amount must be a positive number with up to 2 decimals")
-  }
-  const [whole, frac = ""] = trimmed.split(".")
-  const minor = Number(whole) * 100 + Number((frac + "00").slice(0, 2))
-  if (!Number.isInteger(minor) || minor <= 0) {
-    throw new Error("Amount must be greater than zero")
-  }
-  return minor
-}
-
-function formatMinor(amountMinor: number, currency: string): string {
-  const abs = Math.abs(amountMinor)
-  const major = Math.floor(abs / 100)
-  const cents = String(abs % 100).padStart(2, "0")
-  return `${major}.${cents} ${currency}`
 }
 
 function formulaLabel(formula: AmountOrFormula): string {
@@ -111,6 +99,8 @@ export function PlansPanel({ doc, changeDoc }: PlansPanelProps) {
 
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
+  const [showPlanForm, setShowPlanForm] = useState(false)
+  const [showTemplates, setShowTemplates] = useState(false)
 
   // Plan form
   const [editingPlanId, setEditingPlanId] = useState<string | null>(null)
@@ -143,6 +133,7 @@ export function PlansPanel({ doc, changeDoc }: PlansPanelProps) {
     setUsePaydaySchedule(true)
     setOccurrenceCount("")
     setError(null)
+    setShowPlanForm(false)
   }
 
   function resetTemplateForm() {
@@ -176,6 +167,7 @@ export function PlansPanel({ doc, changeDoc }: PlansPanelProps) {
     }
     setError(null)
     setMessage(null)
+    setShowPlanForm(true)
   }
 
   function startEditTemplate(template: PlanTemplate) {
@@ -433,14 +425,35 @@ export function PlansPanel({ doc, changeDoc }: PlansPanelProps) {
   }
 
   return (
-    <section className="flex flex-col gap-4 border-t border-border pt-6">
-      <div>
-        <h2 className="text-sm font-medium text-foreground">Plans</h2>
-        <p className="text-xs text-muted-foreground">
-          Stored intent by kernel kind. Templates supply labels/defaults.
-          Proposals stay proposed until you confirm — one-off salary variance
-          edits the Entry, not the Plan amount.
-        </p>
+    <section className="flex flex-col gap-4">
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div>
+          <h2 className="text-sm font-medium text-foreground">Plans</h2>
+          <p className="text-xs text-muted-foreground">
+            Recurring income, subscriptions, and repayments. Proposals stay
+            unconfirmed until you post them in Activity.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            type="button"
+            size="sm"
+            onClick={() => {
+              resetPlanForm()
+              setShowPlanForm(true)
+            }}
+          >
+            + Plan
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => setShowTemplates((open) => !open)}
+          >
+            {showTemplates ? "Hide templates" : "Templates"}
+          </Button>
+        </div>
       </div>
 
       {message ? (
@@ -454,15 +467,14 @@ export function PlansPanel({ doc, changeDoc }: PlansPanelProps) {
         </p>
       ) : null}
 
-      <div className="flex flex-wrap gap-2">
-        <Button type="button" variant="outline" size="sm" onClick={handleSeedCatalog}>
-          Seed catalog templates
-        </Button>
-      </div>
-
-      {/* Templates */}
+      {showTemplates ? (
       <div className="flex flex-col gap-3 rounded-md border border-border p-3">
-        <p className="text-xs font-medium text-foreground">Plan templates</p>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-xs font-medium text-foreground">Plan templates</p>
+          <Button type="button" variant="ghost" size="sm" onClick={handleSeedCatalog}>
+            Seed starter templates
+          </Button>
+        </div>
         <form onSubmit={handleSaveTemplate} className="flex flex-col gap-3">
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5">
@@ -476,7 +488,7 @@ export function PlansPanel({ doc, changeDoc }: PlansPanelProps) {
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="template-kind">Kernel kind</Label>
+              <Label htmlFor="template-kind">Type</Label>
               <select
                 id="template-kind"
                 className={selectClassName}
@@ -582,8 +594,9 @@ export function PlansPanel({ doc, changeDoc }: PlansPanelProps) {
           </ul>
         )}
       </div>
+      ) : null}
 
-      {/* Plans */}
+      {showPlanForm ? (
       <form
         onSubmit={handleSavePlan}
         className="flex flex-col gap-3 rounded-md border border-border p-3"
@@ -609,7 +622,7 @@ export function PlansPanel({ doc, changeDoc }: PlansPanelProps) {
                 />
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="plan-kind">Kernel kind</Label>
+                <Label htmlFor="plan-kind">Type</Label>
                 <select
                   id="plan-kind"
                   className={selectClassName}
@@ -735,20 +748,19 @@ export function PlansPanel({ doc, changeDoc }: PlansPanelProps) {
               <Button type="submit">
                 {editingPlanId ? "Save plan" : "Add plan"}
               </Button>
-              {editingPlanId ? (
-                <Button type="button" variant="ghost" onClick={resetPlanForm}>
-                  Cancel edit
-                </Button>
-              ) : null}
+              <Button type="button" variant="ghost" onClick={resetPlanForm}>
+                Cancel
+              </Button>
             </div>
           </>
         )}
       </form>
+      ) : null}
 
       {plans.length === 0 ? (
         <p className="text-xs text-muted-foreground">No plans yet.</p>
       ) : (
-        <ul className="flex flex-col gap-2">
+        <div className="rounded-md border border-border/80">
           {plans.map((plan) => {
             const template = plan.templateId
               ? doc.planTemplatesById?.[plan.templateId]
@@ -760,34 +772,19 @@ export function PlansPanel({ doc, changeDoc }: PlansPanelProps) {
               ? doc.accountsById[plan.linkedAccountIds[1]]?.name
               : null
             return (
-              <li
-                key={plan.id}
-                className="flex flex-wrap items-start justify-between gap-2 rounded-md border border-border px-3 py-2"
-              >
-                <div className="min-w-0">
-                  <p className="text-sm text-foreground">
-                    {plan.name}
-                    <span className="ml-2 text-xs capitalize text-muted-foreground">
-                      {plan.status}
-                    </span>
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {plan.kind}
-                    {template
-                      ? ` · template: ${template.name}${
-                          template.labels?.length
-                            ? ` [${template.labels.join(", ")}]`
-                            : ""
-                        }`
-                      : ""}
-                    {` · ${formulaLabel(plan.amountOrFormula)}`}
-                    {from && to ? ` · ${from} → ${to}` : ""}
-                    {plan.occurrenceIds.length
-                      ? ` · ${plan.occurrenceIds.length} occurrence(s)`
-                      : ""}
-                  </p>
-                </div>
-                <div className="flex flex-wrap gap-1">
+              <ListRow key={plan.id}>
+                <StatusDot
+                  tone={plan.status === "active" ? "active" : "muted"}
+                  label={plan.status}
+                />
+                <RowTitle>{plan.name}</RowTitle>
+                <RowMeta>
+                  {plan.kind}
+                  {template ? ` · ${template.name}` : ""}
+                  {` · ${formulaLabel(plan.amountOrFormula)}`}
+                  {from && to ? ` · ${from} → ${to}` : ""}
+                </RowMeta>
+                <RowActions>
                   {plan.status === "active" ? (
                     <Button
                       type="button"
@@ -800,7 +797,7 @@ export function PlansPanel({ doc, changeDoc }: PlansPanelProps) {
                   ) : null}
                   <Button
                     type="button"
-                    variant="outline"
+                    variant="ghost"
                     size="sm"
                     onClick={() => startEditPlan(plan)}
                   >
@@ -816,11 +813,11 @@ export function PlansPanel({ doc, changeDoc }: PlansPanelProps) {
                       Cancel
                     </Button>
                   ) : null}
-                </div>
-              </li>
+                </RowActions>
+              </ListRow>
             )
           })}
-        </ul>
+        </div>
       )}
     </section>
   )

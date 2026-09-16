@@ -18,7 +18,32 @@ Nancyfi is a **responsive website**. One codebase adapts to desktop, tablet, and
 - Avoid packing secondary marketing or metadata into the first viewport of promotional pages; product UI can be denser where the job is editing money.
 - Test at least three widths: phone (~390), tablet (~768), desktop (~1280).
 
+## Navigation (resolved)
+
+- Primary budget jobs are **Home**, **Payday**, **Recurring**, and
+  **Transactions**. Account/category setup, People, advanced data, and budget
+  configuration live in grouped Settings.
+- **Desktop:** one persistent left sidebar (`AppShell`) lists budgets and the
+  four primary jobs. Do not repeat the same destinations as content tabs.
+- **Mobile:** that sidebar becomes a drawer opened from the sticky header.
+  Do not render a second horizontally clipped section strip; sync status stays
+  in the header.
+- Hard-coded primary jobs bind later to Lenses
+  ([NAN-20](https://linear.app/nancyfi/issue/NAN-20/lenses-and-displayprofiles-household-default-personal)).
+
 ## Open decisions
 
-- Navigation pattern on mobile (bottom nav vs drawer vs top) — prefer Linear-like sidebar collapsing to drawer/bottom where needed.
-- Whether desktop uses a persistent sidebar for budget list (**yes** as default per Linear-inspired shell).
+- Whether desktop uses a persistent sidebar for budget list — **yes** (shipped default).
+- Bottom nav vs drawer on mobile — **drawer** shipped; bottom nav may revisit after usage.
+
+## Task forms
+
+- Start from a user job (Expense / Income / Transfer; Salary / Bill or
+  subscription / Debt repayment / Savings), not an Account, Entry, or Plan
+  editor.
+- On phone widths, focused task forms use the full content width and reveal
+  cadence/end-condition fields only when relevant.
+- Kernel kinds, posting direction, lifecycle status, and occurrence count stay
+  out of the default flow. Advanced primitive editors may exist in Settings.
+
+Work: [NAN-31](https://linear.app/nancyfi/issue/NAN-31/simplify-core-money-flow-with-scenario-safe-tasks).

@@ -16,7 +16,11 @@ import {
 } from "../actions"
 import { createBudgetInRepo } from "../repo/budget-handles"
 
-export function BudgetListPanel() {
+export function BudgetListPanel({
+  onBudgetsChange,
+}: {
+  onBudgetsChange?: (budgets: BudgetListItem[]) => void
+} = {}) {
   const repo = useRepo()
   const router = useRouter()
   const [budgets, setBudgets] = useState<BudgetListItem[]>([])
@@ -24,6 +28,11 @@ export function BudgetListPanel() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [pending, startTransition] = useTransition()
+
+  function updateBudgets(next: BudgetListItem[]) {
+    setBudgets(next)
+    onBudgetsChange?.(next)
+  }
 
   useEffect(() => {
     let cancelled = false
@@ -33,10 +42,10 @@ export function BudgetListPanel() {
       if (cancelled) return
       if (!result.ok) {
         setError(result.error)
-        setBudgets([])
+        updateBudgets([])
       } else {
         setError(null)
-        setBudgets(result.data)
+        updateBudgets(result.data)
       }
       setLoading(false)
     }
@@ -44,6 +53,7 @@ export function BudgetListPanel() {
     return () => {
       cancelled = true
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- load once on mount
   }, [])
 
   function refreshList() {
@@ -53,7 +63,7 @@ export function BudgetListPanel() {
         setError(result.error)
         return
       }
-      setBudgets(result.data)
+      updateBudgets(result.data)
       setError(null)
     })
   }
@@ -83,7 +93,7 @@ export function BudgetListPanel() {
           return
         }
         setName("")
-        setBudgets((prev) => [result.data, ...prev])
+        updateBudgets([result.data, ...budgets.filter((b) => b.id !== result.data.id)])
         router.push(`/budgets/${id}`)
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to create budget")
@@ -149,7 +159,7 @@ export function BudgetListPanel() {
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium">{budget.name}</p>
                     <p className="text-xs text-muted-foreground capitalize">
-                      {budget.role}
+                      {budget.role === "owner" ? "Owner" : "Contributor"}
                     </p>
                   </div>
                   <span className="shrink-0 text-xs text-muted-foreground">

@@ -12,6 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { authClient } from "@/lib/auth-client"
 
 import { acceptBudgetInviteAction } from "../actions"
 
@@ -23,6 +24,13 @@ type InviteAcceptClientProps = {
   signedIn: boolean
   signedInEmail: string | null
   emailMatches: boolean
+}
+
+const statusLabel: Record<InviteAcceptClientProps["status"], string> = {
+  pending: "Waiting for you",
+  accepted: "Accepted",
+  cancelled: "Cancelled",
+  expired: "Expired",
 }
 
 export function InviteAcceptClient({
@@ -37,6 +45,7 @@ export function InviteAcceptClient({
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
   const [pending, startTransition] = useTransition()
+  const [signingOut, setSigningOut] = useState(false)
 
   function handleAccept() {
     setError(null)
@@ -51,9 +60,16 @@ export function InviteAcceptClient({
     })
   }
 
+  async function handleSignOut() {
+    setSigningOut(true)
+    await authClient.signOut()
+    router.refresh()
+  }
+
   const canAccept = signedIn && emailMatches && status === "pending"
-  const signInHref = `/sign-in?next=${encodeURIComponent(`/invites/${token}`)}`
-  const signUpHref = `/sign-up?next=${encodeURIComponent(`/invites/${token}`)}`
+  const invitePath = `/invites/${token}`
+  const signInHref = `/sign-in?next=${encodeURIComponent(invitePath)}`
+  const signUpHref = `/sign-up?next=${encodeURIComponent(invitePath)}`
 
   return (
     <div className="flex flex-1 flex-col">
@@ -76,7 +92,7 @@ export function InviteAcceptClient({
               </div>
               <div>
                 <dt className="text-xs text-muted-foreground">Status</dt>
-                <dd className="capitalize">{status}</dd>
+                <dd>{statusLabel[status]}</dd>
               </div>
             </dl>
 
@@ -101,15 +117,29 @@ export function InviteAcceptClient({
             ) : null}
 
             {signedIn && !emailMatches ? (
-              <p className="text-sm text-destructive" role="alert">
-                You are signed in as {signedInEmail}. Switch to {invitedEmail} to
-                accept this invite.
-              </p>
+              <div className="flex flex-col gap-3">
+                <p className="text-sm text-destructive" role="alert">
+                  You are signed in as {signedInEmail}. Switch to {invitedEmail}{" "}
+                  to accept this invite.
+                </p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={signingOut}
+                  onClick={() => void handleSignOut()}
+                >
+                  Sign out
+                </Button>
+              </div>
             ) : null}
 
             {status !== "pending" ? (
               <p className="text-sm text-muted-foreground">
-                This invitation is no longer pending.
+                {status === "accepted"
+                  ? "This invitation was already accepted."
+                  : status === "expired"
+                    ? "This invitation has expired. Ask the owner to send a new one."
+                    : "This invitation was cancelled. Ask the owner to send a new one."}
                 {status === "accepted" ? (
                   <>
                     {" "}

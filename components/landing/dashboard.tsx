@@ -1,19 +1,18 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 
+import { AppShell } from "@/components/app-shell"
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
 import { authClient } from "@/lib/auth-client"
 import { BudgetListPanel } from "@/features/budgets/components/budget-list-panel"
 import { SyncStatusIndicator } from "@/features/budgets/components/sync-status-indicator"
 import { BudgetRepoProvider } from "@/features/budgets/repo/repo-provider"
+import {
+  listBudgetsAction,
+  type BudgetListItem,
+} from "@/features/budgets/actions"
 
 export function Dashboard({
   name,
@@ -23,6 +22,18 @@ export function Dashboard({
   email: string
 }) {
   const router = useRouter()
+  const [budgets, setBudgets] = useState<BudgetListItem[]>([])
+
+  useEffect(() => {
+    let cancelled = false
+    void listBudgetsAction().then((result) => {
+      if (cancelled || !result.ok) return
+      setBudgets(result.data)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   async function handleSignOut() {
     await authClient.signOut()
@@ -31,39 +42,35 @@ export function Dashboard({
 
   return (
     <BudgetRepoProvider>
-      <div className="flex flex-1 flex-col">
-        <header className="mx-auto flex w-full max-w-5xl items-center justify-between px-6 py-5">
-          <p className="text-sm font-semibold tracking-tight">Nancyfi</p>
-          <div className="flex items-center gap-3">
+      <AppShell
+        title={`Welcome back${name ? `, ${name}` : ""}`}
+        subtitle={email}
+        budgets={budgets.map((budget) => ({
+          id: budget.id,
+          name: budget.name,
+          href: `/budgets/${budget.id}`,
+        }))}
+        headerActions={
+          <>
             <SyncStatusIndicator />
             <Button variant="ghost" size="sm" onClick={handleSignOut}>
               Sign out
             </Button>
+          </>
+        }
+      >
+        <div className="flex flex-col gap-4">
+          <div>
+            <h2 className="text-sm font-medium">Your budgets</h2>
+            <p className="text-xs text-muted-foreground">
+              Create a budget, invite others, and keep editing even offline.
+            </p>
           </div>
-        </header>
-
-        <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-6 pb-16">
-          <div className="flex flex-col gap-2">
-            <h1 className="text-2xl font-semibold tracking-tight">
-              Welcome back{name ? `, ${name}` : ""}
-            </h1>
-            <p className="text-sm text-muted-foreground">{email}</p>
-          </div>
-
-          <Card className="max-w-lg">
-            <CardHeader>
-              <CardTitle>Your budgets</CardTitle>
-              <CardDescription>
-                Create and open budgets you own or contribute to. Membership
-                lives on the server; content syncs locally with Automerge.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <BudgetListPanel />
-            </CardContent>
-          </Card>
-        </main>
-      </div>
+          <BudgetListPanel
+            onBudgetsChange={setBudgets}
+          />
+        </div>
+      </AppShell>
     </BudgetRepoProvider>
   )
 }
