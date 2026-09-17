@@ -29,7 +29,7 @@ A budget is the thing a person (or group) plans and tracks money against. One us
 | Payday | Prepare occurrence, adjust actual salary, review, confirm |
 | Advanced data | Primitive Accounts / Entries / Plans and templates |
 | Local CRDT store | `BudgetRepoProvider` + `createBudgetInRepo` |
-| Automerge sync (dev) | `bun run sync` + `NEXT_PUBLIC_AUTOMERGE_SYNC_URL` (WebSocket) |
+| Automerge sync | `bun run sync` + `NEXT_PUBLIC_AUTOMERGE_SYNC_URL` + `AUTOMERGE_SYNC_JWT_SECRET` (membership JWT on connect) |
 
 Create flow: client imports schema-init bytes into Automerge Repo, then `createBudgetAction` registers catalog + owner membership. Rename updates CRDT `name` and catalog `budget.name`. Archive sets control-plane `status = archived` (owner only).
 

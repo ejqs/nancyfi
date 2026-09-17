@@ -145,10 +145,21 @@ export {
   createBrowserRepo,
   getAutomergeSyncUrl,
   getOrCreateBrowserRepo,
+  replaceBrowserSyncAuth,
   clearBrowserAutomergeStorage,
   clearBrowserRepoSingleton,
   INDEXED_DB_NAME,
 } from "./repo/create-browser-repo"
+
+export { requestSyncCredentialsRefresh } from "./repo/repo-provider"
+
+export {
+  mintSyncToken,
+  verifySyncToken,
+  syncUrlWithToken,
+  SYNC_TOKEN_TTL_SECONDS,
+  SYNC_TOKEN_QUERY_PARAM,
+} from "./repo/sync-token"
 
 export {
   BUDGET_MEMBERSHIP_ROLES,
