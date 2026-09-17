@@ -23,7 +23,7 @@ A budget is the thing a person (or group) plans and tracks money against. One us
 | Grouped settings | Money & categories · People · Advanced data · Budget |
 | Members + invites | Settings → People (`MembersPanel`; owner invite by email; Copy link; revoke / leave) |
 | Accept invite | `/invites/[token]` (Sign out on email mismatch) |
-| Account reset | Dashboard → **Reset account to 0** (`AccountResetPanel` + `resetUserAccountAction`) — archives sole-owned budgets, leaves the rest, clears local Automerge store |
+| Account reset | Dashboard → **Reset account to 0** (`AccountResetPanel` + `resetUserAccountAction`) — hard-deletes sole-owned budgets, leaves shared ones, clears local Automerge store |
 | Transactions | Expense · Income · Transfer task form; dense transaction rows |
 | Recurring | Salary · Bill/subscription · Debt repayment · Savings task form |
 | Payday | Prepare occurrence, adjust actual salary, review, confirm |
@@ -73,6 +73,7 @@ not the default onboarding path.
 
 - **Budgets list** is derived from control-plane `budget_membership` records (not a separate Automerge root doc).
 - **Archive** sets `budget.status = archived` on the control plane (owner only). CRDT content is retained locally; no tombstone delete yet.
+- **Account reset** ([NAN-35](https://linear.app/nancyfi/issue/NAN-35/reset-user-account-back-to-empty-0-budgets)) hard-deletes sole-owned budget catalog rows (cascading memberships/invites) so the workspace returns to 0 budgets; shared budgets are left, not deleted for other members.
 - **Invites** — email link → `/invites/[token]`; always `contributor`; owners invite; revoke/leave on control plane (see multiplayer).
 
 ## Related docs

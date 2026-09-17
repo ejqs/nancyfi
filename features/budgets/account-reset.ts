@@ -18,19 +18,20 @@ export type UserMembershipSnapshot = {
 }
 
 export type UserAccountResetPlanItem =
-  | { budgetId: string; action: "archive-and-leave" }
+  | { budgetId: string; action: "delete-budget" }
   | { budgetId: string; action: "leave" }
 
 /**
  * Decide how each membership is cleared so the user ends with no budget access.
- * Last owner → archive then leave. Everyone else → leave only.
+ * Last owner → hard-delete the budget catalog (cascades memberships/invites).
+ * Everyone else → leave only (cannot delete shared budgets others still own).
  */
 export function planUserAccountReset(
   memberships: UserMembershipSnapshot[],
 ): UserAccountResetPlanItem[] {
   return memberships.map((membership) => {
     if (membership.role === "owner" && membership.ownerCount <= 1) {
-      return { budgetId: membership.budgetId, action: "archive-and-leave" }
+      return { budgetId: membership.budgetId, action: "delete-budget" }
     }
     return { budgetId: membership.budgetId, action: "leave" }
   })

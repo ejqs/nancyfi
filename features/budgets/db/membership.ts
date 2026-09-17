@@ -183,15 +183,15 @@ export async function archiveBudgetCatalog(
 }
 
 export type ResetUserAccountResult = {
-  archivedBudgetIds: string[]
+  deletedBudgetIds: string[]
   leftBudgetIds: string[]
   cancelledInviteCount: number
 }
 
 /**
- * Wipe the user’s budget access so their workspace is empty (0 budgets).
- * Keeps the auth user. Last-owner budgets are archived first; memberships
- * and pending invites for this user are removed/cancelled.
+ * Wipe the user’s budgets and access so their workspace is empty (0 budgets).
+ * Keeps the auth user. Last-owner budgets are hard-deleted on the control plane
+ * (memberships + invites cascade). Shared budgets are left only.
  */
 export async function resetUserAccountData(input: {
   userId: string
@@ -232,16 +232,15 @@ export async function resetUserAccountData(input: {
     }
 
     const plan = planUserAccountReset(snapshots)
-    const archivedBudgetIds: string[] = []
+    const deletedBudgetIds: string[] = []
     const leftBudgetIds: string[] = []
 
     for (const item of plan) {
-      if (item.action === "archive-and-leave") {
-        await tx
-          .update(budget)
-          .set({ status: "archived" })
-          .where(eq(budget.id, item.budgetId))
-        archivedBudgetIds.push(item.budgetId)
+      if (item.action === "delete-budget") {
+        // Cascades budget_membership + budget_invite rows for this budget.
+        await tx.delete(budget).where(eq(budget.id, item.budgetId))
+        deletedBudgetIds.push(item.budgetId)
+        continue
       }
       await tx
         .delete(budgetMembership)
@@ -269,7 +268,7 @@ export async function resetUserAccountData(input: {
       .returning({ id: budgetInvite.id })
 
     return {
-      archivedBudgetIds,
+      deletedBudgetIds,
       leftBudgetIds,
       cancelledInviteCount: cancelled.length,
     }
