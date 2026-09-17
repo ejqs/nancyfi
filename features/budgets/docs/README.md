@@ -23,6 +23,7 @@ A budget is the thing a person (or group) plans and tracks money against. One us
 | Grouped settings | Money & categories · People · Advanced data · Budget |
 | Members + invites | Settings → People (`MembersPanel`; owner invite by email; Copy link; revoke / leave) |
 | Accept invite | `/invites/[token]` (Sign out on email mismatch) |
+| Account reset | Dashboard → **Reset account to 0** (`AccountResetPanel` + `resetUserAccountAction`) — archives sole-owned budgets, leaves the rest, clears local Automerge store |
 | Transactions | Expense · Income · Transfer task form; dense transaction rows |
 | Recurring | Salary · Bill/subscription · Debt repayment · Savings task form |
 | Payday | Prepare occurrence, adjust actual salary, review, confirm |

@@ -7,6 +7,7 @@ import { AppShell } from "@/components/app-shell"
 import { Button } from "@/components/ui/button"
 import { authClient } from "@/lib/auth-client"
 import { BudgetListPanel } from "@/features/budgets/components/budget-list-panel"
+import { AccountResetPanel } from "@/features/budgets/components/account-reset-panel"
 import { SyncStatusIndicator } from "@/features/budgets/components/sync-status-indicator"
 import { BudgetRepoProvider } from "@/features/budgets/repo/repo-provider"
 import {
@@ -68,6 +69,9 @@ export function Dashboard({
           </div>
           <BudgetListPanel
             onBudgetsChange={setBudgets}
+          />
+          <AccountResetPanel
+            onResetComplete={() => setBudgets([])}
           />
         </div>
       </AppShell>

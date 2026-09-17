@@ -68,9 +68,10 @@ Server entry points: `features/budgets/actions.ts` (`createBudgetAction`, `listB
 | Cancel pending invite | Owner | Sets invite `status = cancelled` |
 | Revoke member | Owner | Deletes contributor membership only (cannot revoke owners) |
 | Leave budget | Any member | Deletes own membership; **last owner cannot leave** — archive instead |
-| CRDT | — | Revoke/leave do not delete Automerge content |
+| **Reset account to 0** ([NAN-35](https://linear.app/nancyfi/issue/NAN-35/reset-user-account-back-to-empty-0-budgets)) | Signed-in user | Archives sole-owned budgets, leaves all other memberships, cancels pending invites for that user; login kept. Dashboard **Reset account to 0**. |
+| CRDT | — | Revoke/leave/reset do not delete Automerge content |
 
-UI: `MembersPanel` on the budget workspace. Accept UI: `/invites/[token]`.
+UI: `MembersPanel` on the budget workspace. Accept UI: `/invites/[token]`. Account reset: dashboard `AccountResetPanel`.
 
 ## Open decisions
 

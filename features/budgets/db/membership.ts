@@ -1,9 +1,15 @@
-import { and, desc, eq, ne } from "drizzle-orm"
+import { and, desc, eq, ne, or } from "drizzle-orm"
 
 import { db } from "@/lib/db"
 
 import {
+  planUserAccountReset,
+  type UserMembershipSnapshot,
+} from "../account-reset"
+import { normalizeInviteEmail } from "../invite-rules"
+import {
   budget,
+  budgetInvite,
   budgetMembership,
   type BudgetMembershipRole,
   type BudgetStatus,
@@ -174,4 +180,98 @@ export async function archiveBudgetCatalog(
     .update(budget)
     .set({ status: "archived" })
     .where(eq(budget.id, budgetId))
+}
+
+export type ResetUserAccountResult = {
+  archivedBudgetIds: string[]
+  leftBudgetIds: string[]
+  cancelledInviteCount: number
+}
+
+/**
+ * Wipe the user’s budget access so their workspace is empty (0 budgets).
+ * Keeps the auth user. Last-owner budgets are archived first; memberships
+ * and pending invites for this user are removed/cancelled.
+ */
+export async function resetUserAccountData(input: {
+  userId: string
+  email: string
+}): Promise<ResetUserAccountResult> {
+  if (!input.userId) throw new Error("User id is required")
+  const email = normalizeInviteEmail(input.email)
+  if (!email) throw new Error("User email is required")
+
+  return db.transaction(async (tx) => {
+    const membershipRows = await tx
+      .select({
+        budgetId: budgetMembership.budgetId,
+        role: budgetMembership.role,
+        budgetStatus: budget.status,
+      })
+      .from(budgetMembership)
+      .innerJoin(budget, eq(budgetMembership.budgetId, budget.id))
+      .where(eq(budgetMembership.userId, input.userId))
+
+    const snapshots: UserMembershipSnapshot[] = []
+    for (const row of membershipRows) {
+      const owners = await tx
+        .select({ id: budgetMembership.id })
+        .from(budgetMembership)
+        .where(
+          and(
+            eq(budgetMembership.budgetId, row.budgetId),
+            eq(budgetMembership.role, "owner"),
+          ),
+        )
+      snapshots.push({
+        budgetId: row.budgetId,
+        role: row.role,
+        ownerCount: owners.length,
+        budgetStatus: row.budgetStatus,
+      })
+    }
+
+    const plan = planUserAccountReset(snapshots)
+    const archivedBudgetIds: string[] = []
+    const leftBudgetIds: string[] = []
+
+    for (const item of plan) {
+      if (item.action === "archive-and-leave") {
+        await tx
+          .update(budget)
+          .set({ status: "archived" })
+          .where(eq(budget.id, item.budgetId))
+        archivedBudgetIds.push(item.budgetId)
+      }
+      await tx
+        .delete(budgetMembership)
+        .where(
+          and(
+            eq(budgetMembership.budgetId, item.budgetId),
+            eq(budgetMembership.userId, input.userId),
+          ),
+        )
+      leftBudgetIds.push(item.budgetId)
+    }
+
+    const cancelled = await tx
+      .update(budgetInvite)
+      .set({ status: "cancelled" })
+      .where(
+        and(
+          eq(budgetInvite.status, "pending"),
+          or(
+            eq(budgetInvite.invitedByUserId, input.userId),
+            eq(budgetInvite.email, email),
+          ),
+        ),
+      )
+      .returning({ id: budgetInvite.id })
+
+    return {
+      archivedBudgetIds,
+      leftBudgetIds,
+      cancelledInviteCount: cancelled.length,
+    }
+  })
 }
