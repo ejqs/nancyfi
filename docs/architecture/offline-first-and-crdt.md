@@ -6,6 +6,8 @@ Treat the user’s **local copy** of budget data as primary. Sync when a connect
 
 Nancyfi targets [Automerge](https://automerge.org/docs/hello/) as the CRDT foundation: immutable document snapshots, automatic merge of concurrent changes, and network-agnostic sync.
 
+**Agent requirement:** before any Automerge-related code or sync change, consult the full Automerge LLM reference — [https://automerge.org/llms-full.txt](https://automerge.org/llms-full.txt) — not training-data memory. Enforced by `.cursor/rules/automerge.mdc`.
+
 ## Design principles (from Automerge)
 
 - **Network-agnostic** — sync over WebSocket, other transports, or even out-of-band file exchange; Automerge does not dictate the network.

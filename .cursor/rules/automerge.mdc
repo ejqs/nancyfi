@@ -1,0 +1,24 @@
+---
+description: Always consult Automerge llms-full.txt before Automerge-related changes
+alwaysApply: true
+---
+
+# Automerge API & modeling source of truth
+
+For **any Automerge-related change** in this repo — CRDT document shape, `Automerge.change` / mutations, Repo wiring, IndexedDB / BroadcastChannel / WebSocket adapters, sync server, schema init / migration, counters / `Int` / `Uint` / `Float64`, rich text, or sync auth:
+
+## Must
+
+1. **Before coding**, fetch and consult the full Automerge LLM reference:
+   - https://automerge.org/llms-full.txt
+2. Prefer patterns documented there over training-data assumptions about Automerge / Automerge Repo APIs.
+3. Align with repo design in `docs/architecture/offline-first-and-crdt.md` and budget model docs under `features/budgets/docs/`.
+4. Prefer `@automerge/automerge/slim` (and Repo packages already in the tree) unless the official docs require a different entrypoint for the task.
+
+## Must not
+
+- Invent Automerge APIs, sync protocol details, or conflict-resolution behavior from memory alone.
+- Skip `llms-full.txt` because a similar change was done earlier in the same session — re-check when the API surface or modeling guidance is in play.
+- Treat blog posts or outdated cookbook pages as authoritative when they conflict with `llms-full.txt`.
+
+**Canonical Automerge reference for agents:** https://automerge.org/llms-full.txt
