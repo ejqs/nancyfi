@@ -13,6 +13,10 @@ export const LOCAL_BUDGET_URL_KEY = "nancyfi.localBudgetUrl"
 /**
  * Create a budget in the Repo from shared-ancestry schema bytes.
  * Persists via the Repo storage adapter and announces on the network adapters.
+ *
+ * Today: `repo.import` of unprotected Automerge docs (pre-Keyhive).
+ * Later ([NAN-38](https://linear.app/nancyfi/issue/NAN-38)): prefer ARK `create2` /
+ * keyhive-backed ids while keeping a migration path for unprotected URLs.
  */
 export function createBudgetInRepo(
   repo: Repo,

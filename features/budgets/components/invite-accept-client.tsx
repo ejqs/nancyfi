@@ -15,6 +15,7 @@ import {
 import { authClient } from "@/lib/auth-client"
 
 import { acceptBudgetInviteAction } from "../actions"
+import { requestSyncCredentialsRefresh } from "../repo/repo-provider"
 
 type InviteAcceptClientProps = {
   token: string
@@ -55,6 +56,7 @@ export function InviteAcceptClient({
         setError(result.error)
         return
       }
+      requestSyncCredentialsRefresh()
       router.push(`/budgets/${result.data.budgetId}`)
       router.refresh()
     })

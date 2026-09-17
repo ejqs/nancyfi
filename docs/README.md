@@ -36,7 +36,7 @@ Do not maintain a parallel task list in markdown. When work is discovered in doc
 
 ### Architecture (system-wide)
 
-- [Offline-first & CRDTs](./architecture/offline-first-and-crdt.md)
+- [Offline-first & CRDTs](./architecture/offline-first-and-crdt.md) — local-first Automerge; sync auth; future Keyhive/ARK ([NAN-38](https://linear.app/nancyfi/issue/NAN-38/eventually-automerge-keyhive-ark-e2e-crypto-acl-when-stable))
 - [Data model](./architecture/data-model.md) — primitives index; detail in feature docs
 - [Lenses & personalization](./architecture/lenses-and-personalization.md) — per-user views vs shared ledger
 - [Public / guest share links](./architecture/public-share-links.md) — scoped view & limited guest actions (eventually)

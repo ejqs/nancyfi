@@ -15,6 +15,7 @@ import {
   type BudgetListItem,
 } from "../actions"
 import { createBudgetInRepo } from "../repo/budget-handles"
+import { requestSyncCredentialsRefresh } from "../repo/repo-provider"
 
 export function BudgetListPanel({
   onBudgetsChange,
@@ -92,6 +93,7 @@ export function BudgetListPanel({
           setError(result.error)
           return
         }
+        requestSyncCredentialsRefresh()
         setName("")
         updateBudgets([result.data, ...budgets.filter((b) => b.id !== result.data.id)])
         router.push(`/budgets/${id}`)

@@ -25,6 +25,7 @@ Budgets are collaborative. Each user can have **many budgets**. Users can **invi
 
 - **CRDT document** — budget content (accounts, balanced entries, plans, rule applications/runs). See [data model](./data-model.md).
 - **Control plane** — identity, membership (`owner` / `contributor`), invites. Not pure CRDT; authority must not live only inside the Automerge doc.
+- **Crypto ACL (future)** — Automerge Keyhive / ARK may encrypt docs and grant `relay` / `read` / `edit` / `admin` at the CRDT layer. Product roles stay on the control plane; Keyhive grants should be derived from invites/membership, not replace them. See [offline-first — Keyhive](./offline-first-and-crdt.md#future--keyhive--ark) and [NAN-38](https://linear.app/nancyfi/issue/NAN-38/eventually-automerge-keyhive-ark-e2e-crypto-acl-when-stable).
 - **Lenses & DisplayProfiles** — household **default Lenses** (soft shared starting point) plus **personal** Lenses/DisplayProfiles that override per member. See [Lenses and personalization](./lenses-and-personalization.md).
 
 Shared **Plans** and applied **Rules** affect money or proposals for everyone on the budget. Lenses never do. Paying debt from any Lens still writes shared Entries.
