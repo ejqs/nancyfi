@@ -167,7 +167,7 @@ export async function archiveBudgetAction(input: {
 }
 
 export type ResetUserAccountActionResult = {
-  archivedBudgetIds: string[]
+  deletedBudgetIds: string[]
   leftBudgetIds: string[]
   cancelledInviteCount: number
 }

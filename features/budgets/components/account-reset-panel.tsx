@@ -39,9 +39,12 @@ export function AccountResetPanel({ onResetComplete }: AccountResetPanelProps) {
       }
 
       try {
-        window.localStorage.removeItem(LOCAL_BUDGET_URL_KEY)
         for (const key of Object.keys(window.localStorage)) {
-          if (key.startsWith("nancyfi:setup-dismissed:")) {
+          if (
+            key === LOCAL_BUDGET_URL_KEY ||
+            key.startsWith("nancyfi:") ||
+            key.startsWith("nancyfi.")
+          ) {
             window.localStorage.removeItem(key)
           }
         }
@@ -67,7 +70,8 @@ export function AccountResetPanel({ onResetComplete }: AccountResetPanelProps) {
       <div>
         <h2 className="text-sm font-medium text-foreground">Account</h2>
         <p className="text-xs text-muted-foreground">
-          Reset your Nancyfi workspace back to zero budgets. Your sign-in stays.
+          Permanently delete your budgets and leave every shared one. Your
+          sign-in stays.
         </p>
       </div>
 
@@ -92,8 +96,9 @@ export function AccountResetPanel({ onResetComplete }: AccountResetPanelProps) {
           className="flex flex-col gap-3 rounded-md border border-border p-3"
         >
           <p className="text-xs text-muted-foreground">
-            This archives budgets you solely own, removes you from every other
-            budget, and cancels your pending invites. Type{" "}
+            This permanently deletes budgets you solely own (and their invites /
+            memberships), removes you from every other budget, cancels your
+            pending invites, and clears local data. Type{" "}
             <span className="font-medium text-foreground">
               {USER_ACCOUNT_RESET_CONFIRMATION}
             </span>{" "}
