@@ -48,6 +48,7 @@ Do not maintain a parallel task list in markdown. When work is discovered in doc
 ### Conventions
 
 - [Feature folders](./conventions/feature-folders.md)
+- [Git (branches + commits)](./conventions/git.md) — [Conventional Branch](https://conventionalbranch.org/) + [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/)
 
 ### Feature docs
 
