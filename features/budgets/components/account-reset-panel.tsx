@@ -39,9 +39,12 @@ export function AccountResetPanel({ onResetComplete }: AccountResetPanelProps) {
       }
 
       try {
-        window.localStorage.removeItem(LOCAL_BUDGET_URL_KEY)
         for (const key of Object.keys(window.localStorage)) {
-          if (key.startsWith("nancyfi:setup-dismissed:")) {
+          if (
+            key === LOCAL_BUDGET_URL_KEY ||
+            key.startsWith("nancyfi:") ||
+            key.startsWith("nancyfi.")
+          ) {
             window.localStorage.removeItem(key)
           }
         }
