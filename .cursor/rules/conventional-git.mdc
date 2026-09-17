@@ -1,0 +1,63 @@
+---
+description: Branches follow Conventional Branch; commits follow Conventional Commits
+alwaysApply: true
+---
+
+# Conventional Git (branches + commits)
+
+Always follow these specs — do not invent alternate formats from memory:
+
+- **Branches:** [Conventional Branch](https://conventionalbranch.org/)
+- **Commits:** [Conventional Commits v1.0.0](https://www.conventionalcommits.org/en/v1.0.0/)
+
+Repo notes: `docs/conventions/git.md`.
+
+## Branches
+
+Format: `<type>/<description>` (trunk names `main` / `master` / `develop` have no prefix).
+
+**Purpose prefixes:** `feature` / `feat`, `bugfix` / `fix`, `hotfix`, `release`, `chore`
+
+**AI agent prefixes (valid):** `cursor`, `ai`, `copilot`, `claude`, `codex`
+
+Rules:
+
+1. Lowercase `a-z`, digits, hyphens only (dots allowed in release versions, e.g. `release/v1.2.0`).
+2. No underscores, spaces, or uppercase.
+3. No consecutive, leading, or trailing hyphens/dots in the description.
+4. Prefer including a Linear id in the description when one exists, e.g. `chore/nan-37-conventional-git`.
+5. Do **not** use Linear’s suggested `user/nan-N-…` branch name; use Conventional Branch instead.
+6. Cursor Cloud Agents: `cursor/<descriptive-name>-9f3e` is valid (`cursor/` is an AI source prefix; keep the required run suffix).
+
+## Commits
+
+Format:
+
+```
+<type>[optional scope][optional !]: <description>
+
+[optional body]
+
+[optional footer(s)]
+```
+
+- Required types when applicable: `feat` (new capability), `fix` (bug fix).
+- Other allowed types (Angular / commitlint style): `docs`, `chore`, `refactor`, `test`, `ci`, `build`, `perf`, `style`, `revert`, …
+- Scope is optional noun in parentheses, e.g. `feat(budgets): …`.
+- Breaking change: `!` after type/scope and/or `BREAKING CHANGE:` footer.
+- Description is imperative, concise; reference Linear ids in body/footers or description when useful (`NAN-37`).
+
+### Examples
+
+```
+docs(agents): require Automerge llms-full.txt (NAN-36)
+chore(agents): require conventional branch and commits (NAN-37)
+feat(budgets): add websocket sync for cross-browser
+fix(auth): redirect signed-in users to a safe next path
+```
+
+## Must not
+
+- Commit with free-form subjects that omit `type: ` (e.g. “Update rules”).
+- Create branches like `Feature/Foo`, `fix/header_bug`, or `earlanjoshqs/nan-37-…`.
+- Mix multiple unrelated concerns in one commit when they can be split cleanly.
