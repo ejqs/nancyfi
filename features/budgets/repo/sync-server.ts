@@ -6,6 +6,10 @@
  * JWT (`?token=`) minted by the Next control plane for the peer’s allowlisted
  * document ids.
  *
+ * This process is a **byte relay** — do not add plaintext budget business logic
+ * here. That keeps a future Keyhive/ARK path viable where the server only holds
+ * ciphertext and `relay` access ([NAN-38](https://linear.app/nancyfi/issue/NAN-38)).
+ *
  * Local:
  *   bun run sync
  *

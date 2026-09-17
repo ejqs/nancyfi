@@ -5,7 +5,7 @@ alwaysApply: true
 
 # Automerge API & modeling source of truth
 
-For **any Automerge-related change** in this repo — CRDT document shape, `Automerge.change` / mutations, Repo wiring, IndexedDB / BroadcastChannel / WebSocket adapters, sync server, schema init / migration, counters / `Int` / `Uint` / `Float64`, rich text, or sync auth:
+For **any Automerge-related change** in this repo — CRDT document shape, `Automerge.change` / mutations, Repo wiring, IndexedDB / BroadcastChannel / WebSocket adapters, sync server, schema init / migration, counters / `Int` / `Uint` / `Float64`, rich text, sync auth, or Keyhive / E2E work:
 
 ## Must
 
@@ -14,11 +14,13 @@ For **any Automerge-related change** in this repo — CRDT document shape, `Auto
 2. Prefer patterns documented there over training-data assumptions about Automerge / Automerge Repo APIs.
 3. Align with repo design in `docs/architecture/offline-first-and-crdt.md` and budget model docs under `features/budgets/docs/`.
 4. Prefer `@automerge/automerge/slim` (and Repo packages already in the tree) unless the official docs require a different entrypoint for the task.
+5. **Keyhive / ARK:** do **not** add `@automerge/automerge-repo-keyhive` until [NAN-38](https://linear.app/nancyfi/issue/NAN-38) says it is stable enough. When designing sync/auth/storage, preserve the compatibility rules in `docs/architecture/offline-first-and-crdt.md` § Future — Keyhive / ARK. When implementing Keyhive later, also read https://automerge.org/docs/keyhive/ark-api-guide/.
 
 ## Must not
 
 - Invent Automerge APIs, sync protocol details, or conflict-resolution behavior from memory alone.
 - Skip `llms-full.txt` because a similar change was done earlier in the same session — re-check when the API surface or modeling guidance is in play.
 - Treat blog posts or outdated cookbook pages as authoritative when they conflict with `llms-full.txt`.
+- Ship Keyhive while it remains alpha, or design features that assume sync-server plaintext forever / hard-code JWT `nf-` peer ids as permanent.
 
 **Canonical Automerge reference for agents:** https://automerge.org/llms-full.txt

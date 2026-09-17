@@ -80,11 +80,33 @@ Production `wss://` is not an open relay. Sync connections require a short-lived
 | ACL | Repo `shareConfig.access` allows only document ids listed in the JWT for that `peerId` |
 | Refresh | Client refreshes before expiry; re-issues after budget create / invite accept |
 
-**Crypto decision:** TLS in transit + server-side membership ACL. No encrypt-at-rest / E2E (Keyhive) in v1 — deferred.
+**Crypto decision (v1):** TLS in transit + server-side membership ACL. End-to-end / Keyhive is deferred until stable — see [Future — Keyhive / ARK](#future--keyhive--ark).
 
 Work: [NAN-33](https://linear.app/nancyfi/issue/NAN-33/authenticate-automerge-sync-public-wss-is-unauthenticated).
+
+### Future — Keyhive / ARK
+
+**Eventually** adopt [Automerge Repo Keyhive (ARK)](https://automerge.org/docs/keyhive/ark-api-guide/) for E2E encryption and cryptographic document ACL. Package is still **alpha** — track readiness in [NAN-38](https://linear.app/nancyfi/issue/NAN-38/eventually-automerge-keyhive-ark-e2e-crypto-acl-when-stable). Do not implement until stable.
+
+| Layer | v1 (now) | With Keyhive (later) |
+| --- | --- | --- |
+| Transport | JWT on `wss` upgrade | JWT (or successor) can remain; Keyhive signs/verifies peer traffic |
+| Server sees | Plain CRDT bytes (membership-gated) | Ciphertext; sync server ideally `relay` only |
+| Product roles | Postgres `owner` / `contributor` | Unchanged control plane; Keyhive grants map from invites |
+| Doc ids | Unprotected Automerge URLs | `create2` + keyhive ids; migrate via `isUnprotectedDoc` |
+| Peer id | Opaque string in JWT (`nf-…`) | ARK verifying-key peer id (+ suffix); JWT still treats as opaque |
+| Storage | IndexedDB `nancyfi-automerge` | Separate adapter for keyhive state (`nancyfi-keyhive` reserved) |
+
+**Compatibility rules for current work** (so Keyhive can land without a rewrite):
+
+1. Keep control-plane membership as product authority — never authorize roles from the CRDT alone.
+2. Treat sync JWT `peerId` as opaque (do not assume the `nf-` prefix forever).
+3. Keep the sync peer a **byte relay** (no reading budget plaintext for business logic).
+4. Keep document storage separable from a future keyhive storage database.
+5. When iterating budget doc **root** keys, skip `__automerge-repo-keyhive__*` (see `features/budgets/repo/keyhive-compat.ts`).
+6. Prefer `repo.import` / find-by-URL patterns that still work for unprotected docs during migration.
 
 ## Open decisions
 
 - What lives in Automerge vs relational/auth systems (accounts, invites metadata, billing).
-- Whether to add encrypt-at-rest / Automerge Keyhive E2E later (beyond TLS + ACL).
+- Keyhive adoption timing — gated on ARK leaving alpha ([NAN-38](https://linear.app/nancyfi/issue/NAN-38/eventually-automerge-keyhive-ark-e2e-crypto-acl-when-stable)).

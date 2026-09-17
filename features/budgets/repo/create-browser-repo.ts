@@ -2,6 +2,8 @@
  * Browser Automerge Repo for budget documents.
  *
  * Storage: IndexedDB (`@automerge/automerge-repo-storage-indexeddb`)
+ *   Document store name: `nancyfi-automerge` — keep distinct from the reserved
+ *   Keyhive store name in `keyhive-compat.ts` (`nancyfi-keyhive`).
  * Network:
  *   - BroadcastChannel for same-origin tabs
  *   - Optional WebSocket client → Nancyfi sync server

@@ -162,6 +162,12 @@ export {
 } from "./repo/sync-token"
 
 export {
+  isKeyhiveReservedRootField,
+  KEYHIVE_NUDGE_FIELD,
+  KEYHIVE_STORAGE_NAME_RESERVED,
+} from "./repo/keyhive-compat"
+
+export {
   BUDGET_MEMBERSHIP_ROLES,
   BUDGET_STATUSES,
   BUDGET_INVITE_STATUSES,

@@ -4,7 +4,10 @@
  * Minted by the Next control plane after Better Auth session + membership lookup.
  * Verified by the sync peer on HTTP upgrade (no Postgres on the sync service).
  *
- * Crypto posture: TLS + server-side ACL (not E2E / Keyhive).
+ * Crypto posture (v1): TLS + server-side ACL (not E2E / Keyhive).
+ * `peerId` in the JWT is an **opaque** string — today `nf-<uuid>`; later Automerge
+ * Keyhive/ARK peer ids (verifying-key based) must fit the same field without
+ * assuming the `nf-` prefix ([NAN-38](https://linear.app/nancyfi/issue/NAN-38)).
  */
 import {
   interpretAsDocumentId,
