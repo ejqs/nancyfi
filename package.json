@@ -13,7 +13,7 @@
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
-    "auth:generate": "bun --env-file=.env.local x auth@latest generate --config ./lib/auth.ts --output ./lib/db/auth-schema.ts --yes"
+    "auth:generate": "bun --env-file=.env.local x auth@latest generate --config ./lib/auth.ts --output ./schema/auth-schema.ts --yes"
   },
   "dependencies": {
     "@automerge/automerge": "^3.4.1",

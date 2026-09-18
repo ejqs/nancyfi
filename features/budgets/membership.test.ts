@@ -3,7 +3,7 @@ import { describe, expect, test } from "bun:test"
 import {
   BUDGET_MEMBERSHIP_ROLES,
   BUDGET_STATUSES,
-} from "./db/schema"
+} from "@/schema/budget"
 
 describe("budget membership control plane", () => {
   test("roles are only owner and contributor", () => {

@@ -1,6 +1,6 @@
 import { and, desc, eq } from "drizzle-orm"
 
-import { user } from "@/lib/db/auth-schema"
+import { user } from "@/schema/auth-schema"
 import { db } from "@/lib/db"
 import { sendEmail } from "@/lib/email"
 
@@ -19,7 +19,7 @@ import {
   budgetMembership,
   BUDGET_INVITE_ROLE,
   type BudgetInviteStatus,
-} from "./schema"
+} from "@/schema/budget"
 
 function newId(): string {
   return crypto.randomUUID()

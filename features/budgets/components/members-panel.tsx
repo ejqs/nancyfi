@@ -17,7 +17,7 @@ import {
   type BudgetInviteItem,
   type BudgetMemberItem,
 } from "../actions"
-import type { BudgetMembershipRole } from "../db/schema"
+import type { BudgetMembershipRole } from "@/schema/budget"
 
 type MembersPanelProps = {
   budgetId: string

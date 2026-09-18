@@ -13,7 +13,7 @@ import {
   budgetMembership,
   type BudgetMembershipRole,
   type BudgetStatus,
-} from "./schema"
+} from "@/schema/budget"
 
 export type AccessibleBudget = {
   id: string

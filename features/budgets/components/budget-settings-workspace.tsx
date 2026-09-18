@@ -4,7 +4,7 @@ import type { ChangeFn } from "@automerge/automerge/slim"
 
 import { Separator } from "@/components/ui/separator"
 
-import type { BudgetMembershipRole } from "../db/schema"
+import type { BudgetMembershipRole } from "@/schema/budget"
 import type { BudgetDoc } from "../types"
 import { AccountsPanel } from "./accounts-panel"
 import { BudgetSettingsPanel } from "./budget-settings-panel"
