@@ -7,7 +7,7 @@ import { useDocument, useRepo } from "@automerge/automerge-repo-react-hooks"
 
 import { Button } from "@/components/ui/button"
 
-import type { BudgetMembershipRole } from "../db/schema"
+import type { BudgetMembershipRole } from "@/schema/budget"
 import { getAutomergeSyncUrl } from "../repo/create-browser-repo"
 import { nudgeDocToSyncServer } from "../repo/nudge-remote-sync"
 import {

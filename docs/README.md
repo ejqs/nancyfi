@@ -7,6 +7,7 @@ Design documents and requirements for the app.
 | Scope | Location |
 | --- | --- |
 | Whole system (product, architecture, cross-cutting rules) | `docs/` (this folder) |
+| Drizzle table schemas (app-wide DB) | `schema/` at repo root |
 | One feature / use case | `features/<feature>/docs/` |
 
 Prefer **feature folders** over technical folders when a doc is about one business capability. Put validators, handlers, UI, and docs for that capability together under the same feature. See [Feature folders](https://www.kamilgrzybek.com/blog/posts/feature-folders) and [conventions/feature-folders.md](./conventions/feature-folders.md).

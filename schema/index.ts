@@ -15,4 +15,4 @@ export {
   type BudgetMembershipRole,
   type BudgetStatus,
   type BudgetInviteStatus,
-} from "@/features/budgets/db/schema"
+} from "./budget"

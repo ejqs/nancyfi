@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 
 import { archiveBudgetAction, renameBudgetAction } from "../actions"
-import type { BudgetMembershipRole } from "../db/schema"
+import type { BudgetMembershipRole } from "@/schema/budget"
 import type { BudgetDoc } from "../types"
 
 type BudgetSettingsPanelProps = {

@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic"
 
-import type { BudgetMembershipRole } from "../db/schema"
+import type { BudgetMembershipRole } from "@/schema/budget"
 
 const BudgetDetailClient = dynamic(
   () =>

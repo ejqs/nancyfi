@@ -19,9 +19,14 @@ Reference: [Feature Folders — Kamil Grzybek](https://www.kamilgrzybek.com/blog
 
 ```text
 docs/                          # system-wide design & requirements
+schema/                        # Drizzle table schemas (app-wide DB)
+  auth-schema.ts               # Better Auth generated tables
+  budget.ts                    # Budget control-plane tables
+  index.ts                     # Combined re-exports for migrations / DB client
 features/
   budgets/
     docs/                      # budgets feature + data-model
+    db/                        # feature DB helpers (queries), not table schemas
     …
   rules/
     docs/                      # event-driven custom logic
@@ -31,6 +36,8 @@ features/
     …
 ```
 A feature folder may contain UI, domain logic, and docs side by side. Prefer copying a feature folder as a template when adding a similar capability.
+
+**Drizzle schemas** live in root `schema/` — not under `features/` — because tables and FKs are app-wide (migrations, auth ↔ feature catalogs). Feature folders may keep query helpers under `features/<feature>/db/`.
 
 ## Doc naming inside a feature
 
@@ -45,3 +52,4 @@ Suggested files (add only when needed):
 
 - Duplicate system architecture into every feature; link to `docs/architecture/` instead.
 - Create empty technical mega-folders that cut across unrelated features.
+- Put Drizzle table definitions under `features/` — use root `schema/` instead.
