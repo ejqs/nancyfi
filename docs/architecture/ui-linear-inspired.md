@@ -238,6 +238,12 @@ Show shortcut chips in command results and on settings “Back to app”. Never 
 
 Theme (light vs dark) is a product choice — Linear’s *structure* matters more than copying dark mode. Match whatever theme Nancyfi ships; keep the same density and hierarchy.
 
+## Motion & micro-interactions
+
+When a control, gesture, or feedback already exists in [React Bits Micro](https://reactbits.dev/c/micro), **use that component** (TS + Tailwind via `@react-bits`). Do not invent a parallel spring, swipe, hold, OTP, or status morph.
+
+Linear still owns layout, density, and keyboard. Micro owns the interaction feel. Restyle Micro demo colors to semantic tokens. Full rule: [React Bits Micro](../conventions/react-bits-micro.md) ([NAN-41](https://linear.app/nancyfi/issue/NAN-41/prefer-react-bits-micro-for-ui-interactions)).
+
 ## Anti-patterns
 
 - Dashboard of metric cards as the primary budget surface
@@ -253,9 +259,11 @@ Theme (light vs dark) is a product choice — Linear’s *structure* matters mor
 - User-defined Account/Plan kernel kinds or open-ended Entry statuses outside fixed buckets
 - Mouse-only actions with no command-menu equivalent
 - Silent shortcuts (no `?` help / no hint on command rows)
+- Custom swipe / hold / OTP / status-morph motion when [React Bits Micro](https://reactbits.dev/c/micro) already ships the interaction
 
 ## Implementation notes
 
+- Prefer [React Bits Micro](https://reactbits.dev/c/micro) for matching interactions (swipe rows, switches, hold-to-confirm, status glyphs, toasts, OTP). See [conventions/react-bits-micro.md](../conventions/react-bits-micro.md).
 - Prefer shared list/row primitives in the app shell so Accounts, Entries, and Plans feel like one system.
 - Prefer shared **settings row** primitives (label + description + control) for Preferences and budget setup.
 - Prefer shared **catalog list** primitives for Labels and Plan templates (filter, New, groups, row + `⋯`).

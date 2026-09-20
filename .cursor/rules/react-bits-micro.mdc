@@ -1,0 +1,28 @@
+---
+description: Prefer React Bits Micro for controls, gestures, and feedback
+alwaysApply: true
+---
+
+# React Bits Micro
+
+For **any new or changed UI** (controls, gestures, status/feedback, toasts, OTP, sliders, switches, swipe rows, hold-to-confirm, tooltips, loaders):
+
+## Must
+
+1. **Before inventing motion or a custom gesture**, consult the Micro catalog:
+   - https://reactbits.dev/c/micro
+2. If a Micro component matches the job, **install and use it** (TypeScript + Tailwind). Prefer the wired registry:
+   - `npx shadcn@latest add @react-bits/<PascalName>-TS-TW`
+3. Follow `docs/conventions/react-bits-micro.md` and keep Linear-inspired structure from `docs/architecture/ui-linear-inspired.md`.
+4. After install: read the added files; restyle hardcoded hex to semantic tokens; swap icons to `lucide-react`; keep `prefers-reduced-motion` behavior.
+5. Keep a keyboard / command-menu path. Micro is the feel, not the only way to run the action.
+
+## Must not
+
+- Hand-roll swipe, hold-to-confirm, OTP slots, rubber segments, or status morphs when Micro already has them.
+- Use React Bits Backgrounds / 3D galleries / landing shaders in signed-in product chrome.
+- Use `DodgeField` on money or auth. Keep `PulseHeart`, `FlipCard`, `TearTicket`, `PaperCrumple` off default product lists and settings.
+- Install `@reactbits-pro/` without a license.
+- Skip the catalog because a similar control was written earlier in the session.
+
+**Canonical catalog:** https://reactbits.dev/c/micro

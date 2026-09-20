@@ -19,6 +19,7 @@ When building or changing **signed-in product UI** (budget workspace, lists, boa
 7. Split **personal** vs **budget-shared** settings clearly.
 8. **Taxonomy management:** Workspace ≈ app account; Team ≈ Budget. Labels (not a second “tags” system) managed in a Linear-like catalog (color dot, groups, New label). Statuses = fixed kernel buckets with optional soft names inside — never open-ended money states.
 9. **Keyboard-first:** `⌘/Ctrl K` command menu is the escape hatch for every action; single-key / `G`/`O` chords for common paths; `J`/`K` + `X` for list selection; show shortcut hints; no mouse-only mutations.
+10. **Motion:** if [React Bits Micro](https://reactbits.dev/c/micro) already has the control or feedback, install and use it (`docs/conventions/react-bits-micro.md`). Do not hand-roll the same gesture.
 
 ## Must not
 
