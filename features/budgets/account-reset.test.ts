@@ -7,7 +7,7 @@ import {
 } from "./account-reset"
 
 describe("user account reset plan", () => {
-  test("archives sole-owned budgets and leaves everything else", () => {
+  test("hard-deletes sole-owned budgets and leaves everything else", () => {
     const plan = planUserAccountReset([
       {
         budgetId: "solo",
@@ -36,10 +36,10 @@ describe("user account reset plan", () => {
     ])
 
     expect(plan).toEqual([
-      { budgetId: "solo", action: "archive-and-leave" },
+      { budgetId: "solo", action: "delete-budget" },
       { budgetId: "shared-owner", action: "leave" },
       { budgetId: "contrib", action: "leave" },
-      { budgetId: "archived-solo", action: "archive-and-leave" },
+      { budgetId: "archived-solo", action: "delete-budget" },
     ])
   })
 
