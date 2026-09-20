@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { authClient } from "@/lib/auth-client"
 
 import { listBudgetsAction, type BudgetListItem } from "../actions"
-import type { BudgetMembershipRole } from "../db/schema"
+import type { BudgetMembershipRole } from "@/schema/budget"
 import { BudgetRepoProvider } from "../repo/repo-provider"
 import { SyncStatusIndicator } from "./sync-status-indicator"
 import {

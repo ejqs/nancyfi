@@ -161,7 +161,7 @@ export {
   type BudgetMembershipRole,
   type BudgetStatus,
   type BudgetInviteStatus,
-} from "./db/schema"
+} from "@/schema/budget"
 
 export type { AccessibleBudget } from "./db/membership"
 

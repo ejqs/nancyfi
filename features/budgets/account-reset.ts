@@ -5,7 +5,7 @@
  * @see https://linear.app/nancyfi/issue/NAN-35/reset-user-account-back-to-empty-0-budgets
  */
 
-import type { BudgetMembershipRole, BudgetStatus } from "./db/schema"
+import type { BudgetMembershipRole, BudgetStatus } from "@/schema/budget"
 
 export const USER_ACCOUNT_RESET_CONFIRMATION = "RESET"
 

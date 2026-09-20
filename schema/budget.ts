@@ -7,7 +7,7 @@ import {
   uniqueIndex,
 } from "drizzle-orm/pg-core"
 
-import { user } from "@/lib/db/auth-schema"
+import { user } from "@/schema/auth-schema"
 
 /** Control-plane roles. Never read/write these from the Automerge doc. */
 export const BUDGET_MEMBERSHIP_ROLES = ["owner", "contributor"] as const

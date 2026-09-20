@@ -3,7 +3,7 @@ import { describe, expect, test } from "bun:test"
 import {
   BUDGET_INVITE_ROLE,
   BUDGET_INVITE_STATUSES,
-} from "./db/schema"
+} from "@/schema/budget"
 import {
   emailsMatch,
   inviteExpiresAt,
