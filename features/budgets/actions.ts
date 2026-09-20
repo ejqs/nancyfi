@@ -26,6 +26,11 @@ import {
   resetUserAccountData,
   type AccessibleBudget,
 } from "./db/membership"
+import {
+  getSyncJwtSecretFromEnv,
+  mintSyncToken,
+  SYNC_TOKEN_TTL_SECONDS,
+} from "./repo/sync-token"
 
 export type BudgetListItem = {
   id: string
@@ -437,3 +442,55 @@ export async function acceptBudgetInviteAction(input: {
     }
   }
 }
+
+export type SyncCredentials = {
+  token: string
+  peerId: string
+  expiresAt: number
+  /** Epoch ms when the client should refresh (before JWT exp). */
+  refreshAt: number
+}
+
+/**
+ * Issue a short-lived sync JWT scoped to the signed-in user’s active memberships.
+ * The browser must open the Automerge WebSocket with this peerId + `?token=`.
+ */
+export async function getSyncTokenAction(input: {
+  peerId: string
+}): Promise<BudgetActionResult<SyncCredentials>> {
+  const user = await requireSignedInUser()
+  if (!user) return { ok: false, error: "Sign in required" }
+
+  const peerId = input.peerId?.trim()
+  if (!peerId) return { ok: false, error: "peerId is required" }
+
+  try {
+    const secret = getSyncJwtSecretFromEnv()
+    const budgets = await listAccessibleBudgets(user.id)
+    const minted = await mintSyncToken({
+      userId: user.id,
+      peerId,
+      automergeUrls: budgets.map((b) => b.automergeUrl),
+      secret,
+    })
+    const expiresAtMs = minted.expiresAt * 1000
+    return {
+      ok: true,
+      data: {
+        token: minted.token,
+        peerId: minted.peerId,
+        expiresAt: minted.expiresAt,
+        refreshAt: expiresAtMs - 2 * 60 * 1000,
+      },
+    }
+  } catch (err) {
+    return {
+      ok: false,
+      error:
+        err instanceof Error ? err.message : "Failed to issue sync credentials",
+    }
+  }
+}
+
+/** Exported for tests / docs — token lifetime in seconds. */
+export const SYNC_TOKEN_TTL = SYNC_TOKEN_TTL_SECONDS
