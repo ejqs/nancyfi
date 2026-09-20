@@ -14,6 +14,7 @@ Nancyfi is a **responsive website**. One codebase adapts to desktop, tablet, and
 ## Design notes
 
 - **Product chrome** follows [Linear-inspired UI](./ui-linear-inspired.md) (sidebar + grouped lists, row anatomy, kinds vs labels).
+- **Motion:** prefer [React Bits Micro](../conventions/react-bits-micro.md) when a catalog item matches (e.g. `SwipeRow` for mobile list actions).
 - Prefer progressive disclosure: simple default screens; advanced controls when needed (aligns with product vision).
 - Avoid packing secondary marketing or metadata into the first viewport of promotional pages; product UI can be denser where the job is editing money.
 - Test at least three widths: phone (~390), tablet (~768), desktop (~1280).
