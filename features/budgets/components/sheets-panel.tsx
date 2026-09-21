@@ -73,7 +73,7 @@ export function SheetsPanel({ doc, changeDoc }: SheetsPanelProps) {
           amountMinor,
           fromAccountId: purchaseFrom,
           category: {
-            name: purchaseCategory.trim() || purchaseName.trim() || "Purchase",
+            name: purchaseCategory.trim() || "Purchase",
           },
         })
       })
@@ -215,15 +215,16 @@ export function SheetsPanel({ doc, changeDoc }: SheetsPanelProps) {
                   <FieldLabel htmlFor="purchase-category">
                     Expense category
                   </FieldLabel>
-                  <Input
-                    id="purchase-category"
-                    value={purchaseCategory}
-                    onChange={(event) =>
-                      setPurchaseCategory(event.target.value)
-                    }
-                    placeholder="Gadgets"
-                    autoComplete="off"
-                  />
+                <Input
+                  id="purchase-category"
+                  value={purchaseCategory}
+                  onChange={(event) =>
+                    setPurchaseCategory(event.target.value)
+                  }
+                  placeholder="Gadgets"
+                  autoComplete="off"
+                  required
+                />
                 </Field>
               </div>
               <div className="flex flex-wrap gap-2">

@@ -17,13 +17,6 @@ import { cn } from "@/lib/utils"
 import type { NestedSheetRow } from "../sheets"
 import { StatusDot } from "./list-row"
 
-const sheetFeatures = tableFeatures({
-  rowExpandingFeature,
-  expandedRowModel: createExpandedRowModel(),
-})
-
-const columnHelper = createColumnHelper<typeof sheetFeatures, NestedSheetRow>()
-
 type NestedSheetTableProps = {
   rows: NestedSheetRow[]
   emptyLabel: string
@@ -37,6 +30,19 @@ export function NestedSheetTable({
   showRemaining = false,
   onAddChild,
 }: NestedSheetTableProps) {
+  const sheetFeatures = useMemo(
+    () =>
+      tableFeatures({
+        rowExpandingFeature,
+        expandedRowModel: createExpandedRowModel(),
+      }),
+    [],
+  )
+  const columnHelper = useMemo(
+    () => createColumnHelper<typeof sheetFeatures, NestedSheetRow>(),
+    [sheetFeatures],
+  )
+
   const columns = useMemo(
     () =>
       columnHelper.columns([
@@ -131,17 +137,21 @@ export function NestedSheetTable({
           },
         }),
       ]),
-    [onAddChild, showRemaining],
+    [columnHelper, onAddChild, showRemaining],
   )
 
-  const table = useTable({
-    features: sheetFeatures,
-    data: rows,
-    columns,
-    getRowId: (row) => row.id,
-    getSubRows: (row) => (row.children.length > 0 ? row.children : undefined),
-    autoResetExpanded: false,
-  })
+  const table = useTable(
+    {
+      features: sheetFeatures,
+      data: rows,
+      columns,
+      getRowId: (row) => row.id,
+      getSubRows: (row) =>
+        row.children.length > 0 ? row.children : undefined,
+      autoResetExpanded: false,
+    },
+    (state) => ({ expanded: state.expanded }),
+  )
 
   if (rows.length === 0) {
     return <p className="text-xs text-muted-foreground">{emptyLabel}</p>
