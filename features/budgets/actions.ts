@@ -29,7 +29,6 @@ import {
 import {
   getSyncJwtSecretFromEnv,
   mintSyncToken,
-  SYNC_TOKEN_TTL_SECONDS,
 } from "./repo/sync-token"
 
 export type BudgetListItem = {
@@ -492,5 +491,3 @@ export async function getSyncTokenAction(input: {
   }
 }
 
-/** Exported for tests / docs — token lifetime in seconds. */
-export const SYNC_TOKEN_TTL = SYNC_TOKEN_TTL_SECONDS
