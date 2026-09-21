@@ -155,6 +155,7 @@ export function EntriesPanel({ doc, changeDoc }: EntriesPanelProps) {
           ...(entry.sourcePlanOccurrenceId
             ? { sourcePlanOccurrenceId: entry.sourcePlanOccurrenceId }
             : {}),
+          ...(entry.parentId ? { parentId: entry.parentId } : {}),
         })
       })
       setError(null)

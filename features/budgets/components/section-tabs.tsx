@@ -9,7 +9,7 @@ export type WorkspaceSection =
   | "transactions"
 
 const SECTIONS: { id: WorkspaceSection; label: string }[] = [
-  { id: "home", label: "Home" },
+  { id: "home", label: "Sheets" },
   { id: "payday", label: "Payday" },
   { id: "recurring", label: "Recurring" },
   { id: "transactions", label: "Transactions" },

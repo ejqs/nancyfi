@@ -24,7 +24,7 @@ Persist facts and plans. Derive views instead of maintaining several mutable lis
 | --- | --- |
 | **Budget** | Collaboration boundary plus calendar and currency settings |
 | **Account** | Typed financial container: asset, liability, income, or expense |
-| **Entry** | Proposed or posted financial event with balanced postings |
+| **Entry** | Proposed or posted financial event with balanced postings. Optional `parentId` nests an Entry under another Entry (payday bundle; purchase → repayments). Headphones-this-buy is this Entry, not an Account. |
 | **Plan** | Stored future intent; kernel kinds `income` \| `allocation` \| `subscription` \| `repayment` \| `other` (user **templates** for installment / owe-Mom setups) |
 | **Rule** | Trigger → condition → action behavior applied to plans and events |
 | **Lens** | Declarative derived view (filter/group/layout); usually per-user |
@@ -41,7 +41,7 @@ Persist facts and plans. Derive views instead of maintaining several mutable lis
 - **Entry:** what concretely happened or is proposed
 - **Account:** where the financial effect lands
 
-For example, a `repayment` Plan (from a user template such as “owe Mom”) records “pay Mom a fixed amount twice monthly until August 2028.” A Rule reacts on each payday and generates the next proposed Entry. Posted Entries reduce the liability, so remaining debt is derived rather than manually stored. Installment purchases use the same kernel kind with different template defaults — see [budgets data model — Plan](../../features/budgets/docs/data-model.md#plan).
+For example, a `repayment` Plan (from a user template such as “owe Mom”) records “pay Mom a fixed amount twice monthly until August 2028.” Generated repayment Entries nest under the **purchase Entry** (`Entry.parentId`). Remaining on that purchase is derived (debit − nested posted credits). Mom / Checking stay Accounts. **Do not** invent a Headphones liability Account.
 
 Without Plan, the amount, recipient, cadence, end date, and remaining occurrences live only inside custom code. Nancyfi would have to execute arbitrary code to show upcoming payments, explain an Entry, calculate remaining debt, or cancel safely. Rules would become an **uninspectable second database**.
 
