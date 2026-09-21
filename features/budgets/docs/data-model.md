@@ -24,6 +24,7 @@ Entry
   id, description, effectiveAt, status
   postings[] { accountId, money, role? }
   sourcePlanOccurrenceId?
+  parentId?   // another Entry only — never Account; no persisted children[]
 
 Plan
   id, name, kind, templateId?, status
@@ -83,6 +84,9 @@ An Entry is a proposed or posted financial event.
 | `status` | `proposed` \| `posted` \| `void` | Posted history is not deleted |
 | `postings` | Posting[] | Explicit financial effects |
 | `sourcePlanOccurrenceId` | string? | Explains which Plan occurrence generated it |
+| `parentId` | string? | Optional nest under **another Entry**. Cycles and Account ids are rejected. Children are always derived (no persisted `children[]`). Account folders use `Account.parentId`. |
+
+Payday grouping uses a parent Entry id `payday:${date}:parent` with **empty postings while `proposed`**. That parent is a nest node, not a money fact — confirm-to-post ([NAN-19](https://linear.app/nancyfi/issue/NAN-19/decide-open-money-schedule-fx-policies)) posts the children. Expanding a **Plan** in Recurring/Debts is view-layer via `sourcePlanOccurrenceId` prefix, not `parentId`.
 
 ### Posting
 
@@ -94,7 +98,7 @@ An Entry is a proposed or posted financial event.
 
 **Sign convention (NAN-19):** positive `amountMinor` is a debit; negative is a credit. Assets and expenses increase with debits; liabilities and income increase with credits. Posted Entries balance per currency (sum of signed amounts = 0 per currency). The UI can present a simple from/to amount form and generate the balancing posting internally (`buildBalancingPostings`).
 
-This replaces positional `amounts[]`: ordering is unsafe under concurrent insertion, and a raw amount does not explain whether it is a charge, payment, allocation, or adjustment.
+**Default workspace (NAN-40):** Recurring, Debts, and Payday are nested **TanStack Table** sheets. Recurring lists income / subscription / allocation Plans (expand for generated Entries). Debts lists repayment Plans with **derived** remaining. Payday nests proposed children under a payday parent Entry. One-off transactions and the old Home list live in Settings. Kernel maps stay `accountsById` / `entriesById` / `plansById` (no `entitiesById`). Sheets + mutations stay importable without Next.js — see [clients](../../../docs/architecture/clients.md).
 
 ## Plan
 

@@ -19,14 +19,15 @@ A budget is the thing a person (or group) plans and tracks money against. One us
 | App shell (sidebar + sticky header) | `components/app-shell.tsx` — desktop sidebar, mobile drawer |
 | Budget list + create | Dashboard (`BudgetListPanel`) — membership-backed |
 | Open / rename / archive | `/budgets/[budgetId]` (`BudgetWorkspace` + settings panel) |
-| Primary jobs | Home · Payday · Recurring · Transactions (one navigation control per viewport) |
-| Grouped settings | Money & categories · People · Advanced data · Budget |
+| Primary sheets | Recurring · Debts · Payday (TanStack Table, expand/collapse) |
+| Grouped settings | Overview · Money & categories · Transactions · People · Advanced data · Budget |
 | Members + invites | Settings → People (`MembersPanel`; owner invite by email; Copy link; revoke / leave) |
 | Accept invite | `/invites/[token]` (Sign out on email mismatch) |
 | Account reset | Dashboard → **Reset account to 0** (`AccountResetPanel` + `resetUserAccountAction`) — hard-deletes sole-owned budgets, leaves shared ones, clears local Automerge store |
-| Transactions | Expense · Income · Transfer task form; dense transaction rows |
-| Recurring | Salary · Bill/subscription · Debt repayment · Savings task form |
-| Payday | Prepare occurrence, adjust actual salary, review, confirm |
+| Transactions | Settings → one-off Expense · Income · Transfer (demoted from primary nav) |
+| Recurring | Nested sheet of salary / bills / savings; expand a Plan for generated Entries |
+| Debts | Nested sheet of repayment Plans; remaining derived from posted liability history |
+| Payday | Nested sheet; prepare nests proposed children under `payday:${date}:parent`; confirm-to-post |
 | Advanced data | Primitive Accounts / Entries / Plans and templates |
 | Local CRDT store | `BudgetRepoProvider` + `createBudgetInRepo` |
 | Automerge sync | `bun run sync` + `NEXT_PUBLIC_AUTOMERGE_SYNC_URL` + `AUTOMERGE_SYNC_JWT_SECRET` (membership JWT on connect) |

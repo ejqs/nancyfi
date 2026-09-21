@@ -25,8 +25,10 @@ At payday, the owner wants Nancyfi to:
 
 - recognize or match the salary deposit;
 - calculate the period's fixed and percentage allocations;
-- propose payments due on that payday;
+- propose payments due on that payday **nested under a payday parent Entry** (`payday:${date}:parent`);
 - show what remains available after those commitments.
+
+Proposed children stay `proposed` until confirm (NAN-19). The grouping parent has empty postings and is not posted.
 
 The same payday occurrence must not run twice when multiple offline devices reconnect.
 

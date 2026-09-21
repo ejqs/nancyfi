@@ -4,7 +4,7 @@ Nancyfi uses a small accounting kernel while keeping accounting terminology out 
 
 Feature detail:
 
-- [Budgets data model](../../features/budgets/docs/data-model.md) — Budget, Account, Entry, Plan, and nested values
+- [Budgets data model](../../features/budgets/docs/data-model.md) — Budget, Account, Entry (`parentId` nest), Plan, and nested values
 - [Rules](../../features/rules/docs/README.md) — declarative automation plus sandboxed custom logic
 
 Design test: [payday, subscriptions, and debt reimbursement](../scenarios/payday-subscriptions-and-debt.md).  
@@ -24,7 +24,7 @@ Persist facts and plans. Derive views instead of maintaining several mutable lis
 | --- | --- |
 | **Budget** | Collaboration boundary plus calendar and currency settings |
 | **Account** | Typed financial container: asset, liability, income, or expense |
-| **Entry** | Proposed or posted financial event with balanced postings |
+| **Entry** | Proposed or posted financial event with balanced postings; optional `parentId` → another Entry |
 | **Plan** | Stored future intent; kernel kinds `income` \| `allocation` \| `subscription` \| `repayment` \| `other` (user **templates** for installment / owe-Mom setups) |
 | **Rule** | Trigger → condition → action behavior applied to plans and events |
 | **Lens** | Declarative derived view (filter/group/layout); usually per-user |
@@ -56,7 +56,9 @@ Without Plan, the amount, recipient, cadence, end date, and remaining occurrence
 
 Membership authority is never only inside the CRDT doc; a contributor must not be able to merge themselves into `owner`. Personal Lens/UI state must stay user-scoped; household defaults are soft and overridable ([Lenses](./lenses-and-personalization.md)).
 
-Store entities in maps keyed by stable IDs. Lists contain IDs only when user-defined order matters.
+Store entities in maps keyed by stable IDs (`accountsById`, `entriesById`, `plansById`). Do **not** unify into `entitiesById`. Lists contain IDs only when user-defined order matters. Entry nesting is a parent pointer; children are derived. Account folders use `Account.parentId`. Expanding a Plan in the Recurring/Debts sheets is a view over `sourcePlanOccurrenceId`, not Entry nesting.
+
+The default money UI is nested spreadsheet **sheets** (Recurring / Debts / Payday), not duplicate Linear job lists. Remaining debt and subscription burn stay derived from posted Entries. See [clients](./clients.md) for the Next-free kernel boundary.
 
 ## Money and currencies
 
@@ -68,4 +70,4 @@ Use integer minor units plus an ISO currency code. Never use floating-point valu
 - [Offline-first & CRDTs](./offline-first-and-crdt.md)
 - [Multiplayer](./multiplayer.md)
 - [MCP (brief)](./mcp-and-email-updates.md) → [features/mcp](../../features/mcp/docs/README.md)
-- [Automerge modeling](https://automerge.org/docs/cookbook/modeling-data/)
+- [Clients](./clients.md) — web first; host-agnostic budget kernel

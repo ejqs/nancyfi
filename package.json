@@ -25,6 +25,7 @@
     "@automerge/automerge-repo-storage-nodefs": "2.6.0-alpha.3",
     "@base-ui/react": "^1.8.0",
     "@better-auth/drizzle-adapter": "^1.7.5",
+    "@tanstack/react-table": "^9.2.4",
     "better-auth": "^1.7.5",
     "class-variance-authority": "^0.7.1",
     "cn": "^0.3.0",

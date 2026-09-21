@@ -29,6 +29,8 @@ export type ProposePlanOccurrencesInput = {
   amountMinorOverride?: number
   /** Deterministic Entry ids in tests: `(sourcePlanOccurrenceId) => entryId` */
   entryIdForOccurrence?: (sourcePlanOccurrenceId: string) => string
+  /** Nest generated Entries under a grouping Entry (payday parent). */
+  parentId?: string
 }
 
 export type ProposePlanOccurrencesResult = {
@@ -247,6 +249,7 @@ export function applyProposePlanOccurrences(
       status: "proposed",
       postings,
       sourcePlanOccurrenceId,
+      ...(input.parentId ? { parentId: input.parentId } : {}),
     })
 
     plan.occurrenceIds.push(sourcePlanOccurrenceId)

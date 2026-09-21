@@ -26,17 +26,17 @@ Prefer progressive disclosure: simple default list; filters and columns behind v
 
 ## Task language over ledger language
 
-The ledger remains Accounts + balanced Entries + Plans, but normal product
-flows begin with the person's job:
+The ledger remains Accounts + balanced Entries + Plans. **Money work** happens
+in nested spreadsheet sheets (TanStack Table expand/collapse):
 
-- **Transaction:** Expense, Income, or Transfer
-- **Recurring item:** Salary, Bill or subscription, Debt repayment, or Savings
-- **Payday:** Prepare → review actual salary and commitments → Confirm
+- **Recurring:** Salary, bill/subscription, savings
+- **Debts:** Debt repayment (remaining derived)
+- **Payday:** Prepare → nest proposed children → Confirm
 
-Use **transaction**, **recurring item**, **needs review**, **prepare**,
-**confirm**, and **undo transaction** in default UI. Keep Entry, Plan, proposed,
-post, void, Account kinds, posting direction, and occurrence count in advanced
-data views only.
+One-off **transaction** (Expense, Income, Transfer) stays a settings task.
+Use **needs review**, **prepare**, **confirm**, and **undo transaction** in
+default UI. Keep Entry, Plan, proposed, post, void, Account kinds, posting
+direction, and occurrence count in advanced data views only.
 
 Task commands must create or validate the complete primitive set atomically.
 For example, adding debt requires a liability Account and a repayment Plan;
@@ -269,8 +269,9 @@ Linear still owns layout, density, and keyboard. Micro owns the interaction feel
 - Prefer shared **catalog list** primitives for Labels and Plan templates (filter, New, groups, row + `⋯`).
 - Prefer a shared **command palette** (`⌘/Ctrl K`) + keymap registry; pickers reuse it.
 - Wire grouping and tabs to Lenses when [NAN-20](https://linear.app/nancyfi/issue/NAN-20/lenses-and-displayprofiles-household-default-personal) lands; until then, hard-code a Linear-like shell that can later bind to Lens configs.
-- Use one primary navigation control per viewport: Home, Payday, Recurring,
-  Transactions. Work:
-  [NAN-31](https://linear.app/nancyfi/issue/NAN-31/simplify-core-money-flow-with-scenario-safe-tasks).
+- Use one primary navigation control per viewport: Recurring, Debts,
+  Payday nested sheets. Home and Transactions lists are demoted to Settings.
+  Work:
+  [NAN-40](https://linear.app/nancyfi/issue/NAN-40/nested-spreadsheet-sheets-entryparentid-tanstack-table).
 - Budget setup (labels, templates, household Lens defaults) should feel like Linear’s Issues/Projects settings sections — structured catalogs, not freeform schema editors.
 - App-level workspace settings (profile, members-at-workspace if any, billing later) stay separate from per-budget Money model settings.

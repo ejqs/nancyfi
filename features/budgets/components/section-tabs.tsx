@@ -2,17 +2,12 @@
 
 import { cn } from "@/lib/utils"
 
-export type WorkspaceSection =
-  | "home"
-  | "payday"
-  | "recurring"
-  | "transactions"
+export type WorkspaceSection = "recurring" | "debts" | "payday"
 
 const SECTIONS: { id: WorkspaceSection; label: string }[] = [
-  { id: "home", label: "Home" },
-  { id: "payday", label: "Payday" },
   { id: "recurring", label: "Recurring" },
-  { id: "transactions", label: "Transactions" },
+  { id: "debts", label: "Debts" },
+  { id: "payday", label: "Payday" },
 ]
 
 export function SectionTabs({
