@@ -16,9 +16,9 @@ import {
 } from "../mutations"
 import type { BudgetDoc } from "../types"
 import { BudgetSettingsWorkspace } from "./budget-settings-workspace"
-import { OverviewPanel } from "./overview-panel"
 import { RecurringPanel } from "./recurring-panel"
 import { PaydayBoard } from "./scenario-boards"
+import { SheetsPanel } from "./sheets-panel"
 import {
   WORKSPACE_SECTIONS,
   type WorkspaceSection,
@@ -198,15 +198,7 @@ export function BudgetWorkspace({
       ) : null}
 
       {!settingsOpen && section === "home" ? (
-        <OverviewPanel
-          doc={doc}
-          onNavigate={setSection}
-          onAddTransaction={() => {
-            setTransactionDialogOpen(true)
-            setSection("transactions")
-          }}
-          onOpenSettings={() => setSettingsOpen(true)}
-        />
+        <SheetsPanel doc={doc} changeDoc={changeDoc} />
       ) : null}
       {!settingsOpen && section === "recurring" ? (
         <RecurringPanel doc={doc} changeDoc={changeDoc} />

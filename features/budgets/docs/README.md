@@ -19,7 +19,8 @@ A budget is the thing a person (or group) plans and tracks money against. One us
 | App shell (sidebar + sticky header) | `components/app-shell.tsx` — desktop sidebar, mobile drawer |
 | Budget list + create | Dashboard (`BudgetListPanel`) — membership-backed |
 | Open / rename / archive | `/budgets/[budgetId]` (`BudgetWorkspace` + settings panel) |
-| Primary jobs | Home · Payday · Recurring · Transactions (one navigation control per viewport) |
+| Primary jobs | **Sheets** (TanStack nested Catalog + Debts) · Payday · Recurring · Transactions |
+| Nested sheets | `SheetsPanel` + `NestedSheetTable` (`@tanstack/react-table` expand). Catalog = `Account.parentId`. Debts = purchase `Entry.parentId` → nested repayments. Remaining derived. |
 | Grouped settings | Money & categories · People · Advanced data · Budget |
 | Members + invites | Settings → People (`MembersPanel`; owner invite by email; Copy link; revoke / leave) |
 | Accept invite | `/invites/[token]` (Sign out on email mismatch) |

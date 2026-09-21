@@ -24,6 +24,7 @@ Entry
   id, description, effectiveAt, status
   postings[] { accountId, money, role? }
   sourcePlanOccurrenceId?
+  parentId?          → another Entry (events in events)
 
 Plan
   id, name, kind, templateId?, status
@@ -58,7 +59,7 @@ Member roles (`owner` / `contributor`) remain authoritative on the control plane
 
 ## Account
 
-An Account is a typed container. Hierarchical income/expense accounts can represent categories and groups such as Needs, Wants, and Savings without adding a separate Category primitive.
+An Account is a typed container. Hierarchical income/expense accounts can represent categories and groups such as Needs, Wants, and Savings without adding a separate Category primitive. Account `parentId` is **folders** (Online Services → Brain). A one-off buy you chip away at is an **Entry**, not an Account.
 
 | Field | Type | Notes |
 | --- | --- | --- |
@@ -73,7 +74,7 @@ Entries reference Accounts through postings; Accounts do not own mutable `entrie
 
 ## Entry
 
-An Entry is a proposed or posted financial event.
+An Entry is a proposed or posted financial event. Entries can nest **in other Entries** (`parentId`) — payday bundles, and a purchase you slowly deduct against (Money.numbers Headphones-this-buy). **Do not** invent a Headphones liability Account; remaining is derived on the purchase Entry.
 
 | Field | Type | Notes |
 | --- | --- | --- |
@@ -83,6 +84,7 @@ An Entry is a proposed or posted financial event.
 | `status` | `proposed` \| `posted` \| `void` | Posted history is not deleted |
 | `postings` | Posting[] | Explicit financial effects |
 | `sourcePlanOccurrenceId` | string? | Explains which Plan occurrence generated it |
+| `parentId` | string? | Another **Entry** id. Cycles and Account ids are rejected. Children are derived — never a persisted `children[]`. Expand/collapse is UI state. |
 
 ### Posting
 
@@ -200,16 +202,16 @@ A `subscription` Plan records the service cadence and price. Settlement may use 
 
 ### Debt and cancellation
 
-An annual purchase can increase a liability Account and create a `repayment` Plan (e.g. from an “owe Mom” or “installment” template). Each posted payment reduces that liability. Cancelling the service Plan stops future service occurrences; the liability and repayment Plan remain until settled.
+An annual purchase can increase a settlement Account (Mom) and create a `repayment` Plan. The **purchase is an Entry**; payday credits nest under it via `Entry.parentId`. Remaining on that purchase = debit − nested **posted** credits. Cancelling the service Plan stops future service occurrences; the purchase Entry and nested posted repayments stay. **Do not** copy rows into a second debt list or invent a Headphones Account.
 
-Subscription and debt screens are derived views (**Lenses**). An item can disappear from subscriptions while remaining in debt without moving or duplicating records. Budgets may pin household default Lenses; each member can override with personal Lenses. See [Lenses and personalization](../../../docs/architecture/lenses-and-personalization.md).
+Subscription and debt screens are derived views (**Lenses** / nested sheets). An item can disappear from subscriptions while remaining in debt without moving or duplicating records. Budgets may pin household default Lenses; each member can override with personal Lenses. See [Lenses and personalization](../../../docs/architecture/lenses-and-personalization.md).
 
 ## Automerge notes
 
 - Store entities in maps keyed by stable IDs.
 - Lists contain IDs only where user-defined order matters.
 - Rule/Plan occurrences use deterministic IDs to prevent duplicate execution across offline devices.
-- Initialize schema once and share ancestry; see [Modeling Data](https://automerge.org/docs/cookbook/modeling-data/).
+- Optional `Entry.parentId` is added by `applyUpsertEntry` (same pattern as `Account.parentId`). No schema-init regen; optional fields on map objects do not change shared ancestry.
 
 ## Open decisions
 

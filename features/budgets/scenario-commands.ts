@@ -391,20 +391,20 @@ export function applyCreateDebtRepayment(
     )
     if (purchase.created) accountIds.push(purchase.account.id)
     const openingEntryId = input.openingEntryId ?? taskId("debt-opening")
-    applyUpsertEntry(draft, {
-      id: openingEntryId,
-      description: `${input.name.trim() || liability.account.name} — original amount`,
-      effectiveAt: input.effectiveAt,
-      status: "posted",
-      postings: buildBalancingPostings({
-        fromAccountId: liability.account.id,
-        toAccountId: purchase.account.id,
-        amountMinor: input.originalAmountMinor,
-        currency: draft.defaultCurrency,
-        fromRole: "principal",
-        toRole: "expense",
-      }),
-    })
+  applyUpsertEntry(draft, {
+    id: openingEntryId,
+    description: input.name.trim() || purchase.account.name,
+    effectiveAt: input.effectiveAt,
+    status: "posted",
+    postings: buildBalancingPostings({
+      fromAccountId: liability.account.id,
+      toAccountId: purchase.account.id,
+      amountMinor: input.originalAmountMinor,
+      currency: draft.defaultCurrency,
+      fromRole: "principal",
+      toRole: "expense",
+    }),
+  })
     entryIds.push(openingEntryId)
   }
 
@@ -424,6 +424,124 @@ export function applyCreateDebtRepayment(
   })
 
   return { accountIds, entryIds, planIds: [planId] }
+}
+
+export type RecordPurchaseInput = {
+  entryId?: string
+  description: string
+  effectiveAt: string
+  amountMinor: number
+  /** Settlement or cash the purchase hit (Mom, Checking). Not a Headphones Account. */
+  fromAccountId: string
+  category: NamedAccountInput
+}
+
+/**
+ * Posted purchase Entry. Remaining lives on this Entry once repayments nest
+ * under it (`parentId`). Never creates an item liability Account.
+ */
+export function applyRecordPurchase(
+  draft: BudgetDoc,
+  input: RecordPurchaseInput,
+): TaskResult {
+  ensureBudgetDocShape(draft)
+  requirePositiveMinor(input.amountMinor, "Purchase amount")
+  const from = requireActiveAccount(
+    draft,
+    input.fromAccountId,
+    ["asset", "liability"],
+    "Paid from",
+  )
+  const category = resolveNamedAccount(
+    draft,
+    input.category,
+    "expense",
+    "expense",
+  )
+  const entryId = input.entryId ?? taskId("purchase")
+
+  applyUpsertEntry(draft, {
+    id: entryId,
+    description: input.description.trim() || category.account.name,
+    effectiveAt: input.effectiveAt,
+    status: "posted",
+    postings: buildBalancingPostings({
+      fromAccountId: from.id,
+      toAccountId: category.account.id,
+      amountMinor: input.amountMinor,
+      currency: draft.defaultCurrency,
+      fromRole: "principal",
+      toRole: "expense",
+    }),
+  })
+
+  return {
+    accountIds: category.created ? [category.account.id] : [],
+    entryIds: [entryId],
+    planIds: [],
+  }
+}
+
+export type RecordNestedRepaymentInput = {
+  entryId?: string
+  parentId: string
+  description?: string
+  effectiveAt: string
+  amountMinor: number
+  paymentAccountId: string
+  status?: "proposed" | "posted"
+}
+
+/**
+ * Repayment Entry nested under a purchase Entry. Remaining on the parent is
+ * derived from posted children — not stored, not an item Account.
+ */
+export function applyRecordNestedRepayment(
+  draft: BudgetDoc,
+  input: RecordNestedRepaymentInput,
+): TaskResult {
+  ensureBudgetDocShape(draft)
+  requirePositiveMinor(input.amountMinor, "Repayment amount")
+  const parent = draft.entriesById[input.parentId]
+  if (!parent) throw new Error("Unknown purchase Entry")
+  if (parent.parentId) {
+    throw new Error("Nest repayments under the purchase Entry, not another repayment")
+  }
+
+  const payment = requireActiveAccount(
+    draft,
+    input.paymentAccountId,
+    ["asset"],
+    "Paid from",
+  )
+  const principal = parent.postings.find((posting) => posting.role === "principal")
+  const settlementId = principal?.accountId
+  if (!settlementId) {
+    throw new Error("Purchase Entry is missing a principal posting")
+  }
+  if (settlementId === payment.id) {
+    throw new Error("Pick a different account to pay from than the purchase settlement")
+  }
+
+  const entryId = input.entryId ?? taskId("repayment")
+  applyUpsertEntry(draft, {
+    id: entryId,
+    description:
+      input.description?.trim() || `${parent.description} repayment`,
+    effectiveAt: input.effectiveAt,
+    status: input.status ?? "posted",
+    parentId: parent.id,
+    postings: buildBalancingPostings({
+      fromAccountId: payment.id,
+      toAccountId: settlementId,
+      amountMinor: input.amountMinor,
+      currency: draft.defaultCurrency,
+      fromRole: "payment",
+      toRole: "principal",
+    }),
+  })
+
+  return { accountIds: [], entryIds: [entryId], planIds: [] }
 }
 
 export function planSetupIssue(doc: BudgetDoc, plan: Plan): string | null {

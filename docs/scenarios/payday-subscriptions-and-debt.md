@@ -120,7 +120,8 @@ This mapping is informative; the scenario remains valid if implementation detail
 | Scenario concept | Current primitive |
 | --- | --- |
 | Budget and calendar | Budget |
-| Bank, cash, income, expense, and money owed to another person | Account |
+| One-off buy you chip away at (Headphones-this-buy) | **Purchase Entry** + nested repayment Entries (`parentId`). Remaining derived. Not an Account. |
+| Bank, cash, income, expense folders, and money owed to another person | Account (`parentId` = folders only) |
 | Salary deposit, charge, allocation, or repayment that happened/is proposed | Entry with balanced Postings |
 | Subscription, salary expectation, allocation policy, installment purchase, or debt repayment | Plan (`subscription` / `income` / `allocation` / `repayment`; user **templates** for installment vs owe-Mom labels) |
 | Payday reaction, matching, percentage allocation, or unusual automation | Rule |
@@ -161,7 +162,7 @@ Work:
 1. **Exact money:** values use integer minor units; conversions retain currencies and an explicit exchange rate.
 2. **Idempotent automation:** one scheduled occurrence produces at most one logical result, including after offline merges.
 3. **Auditable history:** cancellation and plan edits never erase posted Entries.
-4. **Derived debt:** outstanding debt equals posted obligation changes and repayments.
+4. **Derived debt:** remaining on a purchase **Entry** equals debit minus nested posted repayment Entries. Settlement nouns (Mom, Checking) stay Accounts.
 5. **Explainability:** every proposed/generated Entry links to the Plan occurrence and Rule version that produced it.
 6. **Variable actual vs Plan:** editing a proposed salary Entry (or matching a deposit) does not delete the RuleRun; percentage allocations use actual salary; the Plan’s typical amount is unchanged by one-off variance.
 7. **Scenario-safe commands:** task creation cannot complete with missing or

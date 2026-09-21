@@ -37,18 +37,22 @@ export {
   applyCancelPlan,
   applyCreatePlanFromTemplate,
   applyDeletePlanTemplate,
+  applySetEntryParent,
   applyUpsertAccount,
   applyUpsertEntry,
   applyUpsertPlan,
   applyUpsertPlanTemplate,
   applyVoidEntry,
+  assertEntryParent,
   assertPostingsBalanced,
   budgetDocNeedsShapeFix,
   buildBalancingPostings,
   cancelPlan,
+  cloneEntryPostings,
   createPlanFromTemplate,
   deletePlanTemplate,
   ensureBudgetDocShape,
+  setEntryParent,
   upsertAccount,
   upsertEntry,
   upsertPlan,
@@ -93,6 +97,8 @@ export {
   applyCreateSubscription,
   applyRecordExpense,
   applyRecordIncome,
+  applyRecordNestedRepayment,
+  applyRecordPurchase,
   applyRecordTransfer,
   planSetupIssue,
   type CreateDebtRepaymentInput,
@@ -100,8 +106,28 @@ export {
   type CreateSubscriptionInput,
   type RecordExpenseInput,
   type RecordIncomeInput,
+  type RecordNestedRepaymentInput,
+  type RecordPurchaseInput,
   type RecordTransferInput,
 } from "./scenario-commands"
+
+export {
+  accountRollupBalanceMinor,
+  entryAmountMinor,
+  isPurchaseEntry,
+  listChildAccounts,
+  listChildEntries,
+  listRootAccounts,
+  purchaseRemainingMinor,
+} from "./entry-tree"
+
+export {
+  buildCatalogSheet,
+  buildDebtsSheet,
+  type NestedSheet,
+  type NestedSheetKind,
+  type NestedSheetRow,
+} from "./sheets"
 
 export {
   proposePlanOccurrences,

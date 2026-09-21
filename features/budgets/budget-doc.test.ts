@@ -184,6 +184,80 @@ describe("budget Automerge data model", () => {
     expect(doc.accountsById.food.parentId).toBeUndefined()
   })
 
+  test("entry parentId nests under another Entry and rejects cycles", () => {
+    let doc = createBudgetDoc({ id: "b1", name: "Test" })
+    doc = upsertAccount(doc, { id: "cash", name: "Cash", kind: "asset" })
+    doc = upsertAccount(doc, { id: "mom", name: "Mom", kind: "liability" })
+    doc = upsertAccount(doc, {
+      id: "gadgets",
+      name: "Gadgets",
+      kind: "expense",
+    })
+
+    doc = upsertEntry(doc, {
+      id: "headphones",
+      description: "Headphones-this-buy",
+      effectiveAt: "2026-07-01T12:00:00.000Z",
+      status: "posted",
+      postings: buildBalancingPostings({
+        fromAccountId: "mom",
+        toAccountId: "gadgets",
+        amountMinor: 27_999,
+        currency: "PHP",
+        fromRole: "principal",
+        toRole: "expense",
+      }),
+    })
+    doc = upsertEntry(doc, {
+      id: "pay-1",
+      description: "2nd July",
+      effectiveAt: "2026-07-02T12:00:00.000Z",
+      status: "posted",
+      parentId: "headphones",
+      postings: buildBalancingPostings({
+        fromAccountId: "cash",
+        toAccountId: "mom",
+        amountMinor: 583,
+        currency: "PHP",
+        fromRole: "payment",
+        toRole: "principal",
+      }),
+    })
+    expect(doc.entriesById["pay-1"].parentId).toBe("headphones")
+
+    expect(() =>
+      upsertEntry(doc, {
+        id: "headphones",
+        description: "Headphones-this-buy",
+        effectiveAt: "2026-07-01T12:00:00.000Z",
+        status: "posted",
+        parentId: "pay-1",
+        postings: buildBalancingPostings({
+          fromAccountId: "mom",
+          toAccountId: "gadgets",
+          amountMinor: 27_999,
+          currency: "PHP",
+        }),
+      }),
+    ).toThrow(/cycle/)
+
+    expect(() =>
+      upsertEntry(doc, {
+        id: "bad",
+        description: "nested under account",
+        effectiveAt: "2026-07-02T12:00:00.000Z",
+        status: "posted",
+        parentId: "mom",
+        postings: buildBalancingPostings({
+          fromAccountId: "cash",
+          toAccountId: "gadgets",
+          amountMinor: 100,
+          currency: "PHP",
+        }),
+      }),
+    ).toThrow(/not an Account/)
+  })
+
   test("plan kinds and rule application slots", () => {
     let doc = createBudgetDoc({ id: "b1", name: "Test" })
     doc = upsertAccount(doc, { id: "income", name: "Salary", kind: "income" })

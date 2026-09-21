@@ -2,7 +2,9 @@
 
 **Product UI** (budget workspace, lists, boards, **settings**) should be heavily inspired by [Linear](https://linear.app)’s issue list, app shell, and Preferences. Marketing / landing pages may diverge for brand; once the user is signed in, prefer this language.
 
-Related: [Responsive UI](./responsive.md), [Lenses](./lenses-and-personalization.md), work [NAN-17](https://linear.app/nancyfi/issue/NAN-17/responsive-app-shell-mobile-tablet-desktop) / [NAN-20](https://linear.app/nancyfi/issue/NAN-20/lenses-and-displayprofiles-household-default-personal).
+**Pivot (in progress):** money itself is a **nested spreadsheet** ([NAN-40](https://linear.app/nancyfi/issue/NAN-40/nested-spreadsheet-sheets-entryparentid-tanstack-table)). First slice ([NAN-42](https://linear.app/nancyfi/issue/NAN-42/first-slice-tanstack-nested-grid-entryparentid)): Home is **Sheets** — TanStack Table expand over `Account.parentId` folders and purchase `Entry.parentId` → nested repayments. Payday / Recurring / Transactions job lists remain until the rest of the pivot. Expand/nest is TanStack’s row model, not a homemade tree.
+
+Related: [Responsive UI](./responsive.md), [Clients](./clients.md), [Lenses](./lenses-and-personalization.md), work [NAN-17](https://linear.app/nancyfi/issue/NAN-17/responsive-app-shell-mobile-tablet-desktop) / [NAN-20](https://linear.app/nancyfi/issue/NAN-20/lenses-and-displayprofiles-household-default-personal).
 
 ## North star
 
@@ -29,6 +31,7 @@ Prefer progressive disclosure: simple default list; filters and columns behind v
 The ledger remains Accounts + balanced Entries + Plans, but normal product
 flows begin with the person's job:
 
+- **Sheets:** Catalog folders and Debts (purchase Entry → nested repayment Entries) as TanStack grids
 - **Transaction:** Expense, Income, or Transfer
 - **Recurring item:** Salary, Bill or subscription, Debt repayment, or Savings
 - **Payday:** Prepare → review actual salary and commitments → Confirm

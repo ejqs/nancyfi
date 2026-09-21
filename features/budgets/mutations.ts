@@ -7,6 +7,7 @@ import type {
   AccountStatus,
   AmountOrFormula,
   BudgetDoc,
+  Entry,
   EntryStatus,
   Money,
   Plan,
@@ -72,7 +73,61 @@ export type UpsertEntryInput = {
     money: Money
     role?: string
   }>
-  sourcePlanOccurrenceId?: string
+  sourcePlanOccurrenceId?: string | null
+  /** Set to a parent Entry id, or `null` to clear. Omit to keep existing. */
+  parentId?: string | null
+}
+
+/**
+ * Entry nesting: parent must be another Entry, not an Account, and must not
+ * create a cycle. Children are derived from this pointer (no `children[]`).
+ */
+export function assertEntryParent(
+  draft: BudgetDoc,
+  entryId: string,
+  parentId: string,
+): void {
+  if (!parentId) throw new Error("parentId is required")
+  if (parentId === entryId) {
+    throw new Error("Entry cannot be its own parent")
+  }
+  if (draft.accountsById[parentId] && !draft.entriesById[parentId]) {
+    throw new Error("Entry parentId must point to another Entry, not an Account")
+  }
+  const parent = draft.entriesById[parentId]
+  if (!parent) {
+    throw new Error(`Unknown parentId: ${parentId}`)
+  }
+
+  let cursor: string | undefined = parentId
+  const seen = new Set<string>()
+  while (cursor) {
+    if (cursor === entryId) {
+      throw new Error("Entry parentId would create a cycle")
+    }
+    if (seen.has(cursor)) {
+      throw new Error("Entry parentId would create a cycle")
+    }
+    const node: Entry | undefined = draft.entriesById[cursor]
+    if (!node) {
+      throw new Error(`Unknown parentId: ${cursor}`)
+    }
+    seen.add(cursor)
+    cursor = node.parentId
+  }
+}
+
+export function cloneEntryPostings(
+  postings: Posting[],
+): Array<{ accountId: string; money: Money; role?: string }> {
+  return postings.map((posting) => ({
+    accountId: posting.accountId,
+    money: {
+      amountMinor: posting.money.amountMinor,
+      currency: posting.money.currency,
+    },
+    ...(posting.role ? { role: posting.role } : {}),
+  }))
 }
 
 /** Draft-safe Account write for use inside `changeDoc` / `Automerge.change`. */
@@ -194,6 +249,7 @@ export function applyUpsertEntry(
   input: UpsertEntryInput,
 ): void {
   requireId(input.id, "Entry")
+  const existing = draft.entriesById[input.id]
   if (input.status !== "void") {
     assertPostingsBalanced(input.postings)
   }
@@ -204,15 +260,33 @@ export function applyUpsertEntry(
     }
   }
 
+  let parentId: string | undefined
+  if (input.parentId === null) {
+    parentId = undefined
+  } else if (typeof input.parentId === "string" && input.parentId) {
+    assertEntryParent(draft, input.id, input.parentId)
+    parentId = input.parentId
+  } else if (existing?.parentId) {
+    parentId = existing.parentId
+  }
+
+  let sourcePlanOccurrenceId: string | undefined
+  if (input.sourcePlanOccurrenceId === null) {
+    sourcePlanOccurrenceId = undefined
+  } else if (typeof input.sourcePlanOccurrenceId === "string") {
+    sourcePlanOccurrenceId = input.sourcePlanOccurrenceId
+  } else if (existing?.sourcePlanOccurrenceId) {
+    sourcePlanOccurrenceId = existing.sourcePlanOccurrenceId
+  }
+
   draft.entriesById[input.id] = {
     id: input.id,
     description: input.description,
     effectiveAt: input.effectiveAt,
     status: input.status,
     postings: [],
-    ...(input.sourcePlanOccurrenceId
-      ? { sourcePlanOccurrenceId: input.sourcePlanOccurrenceId }
-      : {}),
+    ...(sourcePlanOccurrenceId ? { sourcePlanOccurrenceId } : {}),
+    ...(parentId ? { parentId } : {}),
   }
 
   const stored = draft.entriesById[input.id]
@@ -254,6 +328,36 @@ export function voidEntry(
 ): Automerge.Doc<BudgetDoc> {
   return Automerge.change(doc, (draft) => {
     applyVoidEntry(draft, entryId)
+  })
+}
+
+/** Indent / outdent: set or clear `Entry.parentId` without rewriting money. */
+export function applySetEntryParent(
+  draft: BudgetDoc,
+  entryId: string,
+  parentId: string | null,
+): void {
+  requireId(entryId, "Entry")
+  const entry = draft.entriesById[entryId]
+  if (!entry) throw new Error(`Unknown entryId: ${entryId}`)
+  applyUpsertEntry(draft, {
+    id: entry.id,
+    description: entry.description,
+    effectiveAt: entry.effectiveAt,
+    status: entry.status,
+    postings: cloneEntryPostings(entry.postings),
+    parentId,
+    sourcePlanOccurrenceId: entry.sourcePlanOccurrenceId ?? null,
+  })
+}
+
+export function setEntryParent(
+  doc: Automerge.Doc<BudgetDoc>,
+  entryId: string,
+  parentId: string | null,
+): Automerge.Doc<BudgetDoc> {
+  return Automerge.change(doc, (draft) => {
+    applySetEntryParent(draft, entryId, parentId)
   })
 }
 
