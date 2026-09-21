@@ -2,7 +2,6 @@
 
 import { useState } from "react"
 import type { ChangeFn } from "@automerge/automerge/slim"
-import { MoreHorizontal } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -14,13 +13,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import {
   Field,
   FieldError,
   FieldGroup,
@@ -30,23 +22,17 @@ import { Input } from "@/components/ui/input"
 
 import { listDebtDetails } from "../balances"
 import { money } from "../document"
-import { formatMinor, parseMajorToMinor } from "../money-format"
-import { applyCancelPlan, applyUpsertPlan } from "../mutations"
+import { parseMajorToMinor } from "../money-format"
+import { applyUpsertPlan } from "../mutations"
 import {
   applyCreateDebtRepayment,
   applyCreateSalary,
   applyCreateSubscription,
-  planSetupIssue,
 } from "../scenario-commands"
-import { createPaydaySchedule, expandSchedule } from "../schedule"
+import { createPaydaySchedule } from "../schedule"
+import { buildDebtsSheet, buildRecurringSheet } from "../sheets"
 import type { BudgetDoc, Plan, Schedule } from "../types"
-import {
-  ListRow,
-  RowActions,
-  RowMeta,
-  RowTitle,
-  StatusDot,
-} from "./list-row"
+import { NestedSheetTable } from "./nested-sheet"
 
 type RecurringTask = "salary" | "subscription" | "debt" | "savings"
 type Cadence = "payday" | "monthly"
@@ -54,25 +40,11 @@ type Cadence = "payday" | "monthly"
 type RecurringPanelProps = {
   doc: BudgetDoc
   changeDoc: (changeFn: ChangeFn<BudgetDoc>) => void
+  variant?: "recurring" | "debts"
 }
 
 const selectClassName =
   "h-7 w-full rounded-md border border-input bg-input/20 px-2 text-xs outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30"
-
-const GROUPS: Array<{
-  title: string
-  tasks: RecurringTask[]
-  kinds: Plan["kind"][]
-}> = [
-  { title: "Income", tasks: ["salary"], kinds: ["income"] },
-  {
-    title: "Bills & subscriptions",
-    tasks: ["subscription"],
-    kinds: ["subscription"],
-  },
-  { title: "Savings", tasks: ["savings"], kinds: ["allocation"] },
-  { title: "Debt", tasks: ["debt"], kinds: ["repayment"] },
-]
 
 function localDate(): string {
   const now = new Date()
@@ -91,56 +63,6 @@ function monthlySchedule(timezone: string, startAt: string): Schedule {
   }
 }
 
-function nextDate(plan: Plan): string {
-  if (!plan.schedule) return "No schedule"
-  try {
-    const from = localDate()
-    const end = new Date()
-    end.setDate(end.getDate() + 65)
-    const to = `${end.getFullYear()}-${String(end.getMonth() + 1).padStart(2, "0")}-${String(end.getDate()).padStart(2, "0")}`
-    return expandSchedule(plan.schedule, { from, to })[0]?.date ?? "No upcoming date"
-  } catch {
-    return "Schedule unavailable"
-  }
-}
-
-function amountLabel(plan: Plan): string {
-  if (plan.amountOrFormula.type === "fixed") {
-    return formatMinor(
-      plan.amountOrFormula.money.amountMinor,
-      plan.amountOrFormula.money.currency,
-    )
-  }
-  if (plan.amountOrFormula.type === "percent") {
-    return `${plan.amountOrFormula.percentBps / 100}%`
-  }
-  return "Calculated"
-}
-
-function projectedFinish(plan: Plan, remainingMinor: number): string {
-  if (remainingMinor <= 0) return "Paid off"
-  if (
-    !plan.schedule ||
-    plan.amountOrFormula.type !== "fixed" ||
-    plan.amountOrFormula.money.amountMinor <= 0
-  ) {
-    return "Finish date unavailable"
-  }
-  const payments = Math.ceil(
-    remainingMinor / plan.amountOrFormula.money.amountMinor,
-  )
-  const from = localDate()
-  const end = new Date()
-  end.setFullYear(end.getFullYear() + 10)
-  const to = `${end.getFullYear()}-${String(end.getMonth() + 1).padStart(2, "0")}-${String(end.getDate()).padStart(2, "0")}`
-  try {
-    const occurrences = expandSchedule(plan.schedule, { from, to })
-    return occurrences[payments - 1]?.date ?? `${payments} payments left`
-  } catch {
-    return `${payments} payments left`
-  }
-}
-
 function taskForPlan(plan: Plan): RecurringTask {
   if (plan.kind === "income") return "salary"
   if (plan.kind === "subscription") return "subscription"
@@ -148,7 +70,11 @@ function taskForPlan(plan: Plan): RecurringTask {
   return "savings"
 }
 
-export function RecurringPanel({ doc, changeDoc }: RecurringPanelProps) {
+export function RecurringPanel({
+  doc,
+  changeDoc,
+  variant = "recurring",
+}: RecurringPanelProps) {
   const [open, setOpen] = useState(false)
   const [editingPlanId, setEditingPlanId] = useState<string | null>(null)
   const [task, setTask] = useState<RecurringTask>("salary")
@@ -164,19 +90,15 @@ export function RecurringPanel({ doc, changeDoc }: RecurringPanelProps) {
   const [cadence, setCadence] = useState<Cadence>("payday")
   const [error, setError] = useState<string | null>(null)
 
-  const plans = Object.values(doc.plansById ?? {}).sort((a, b) =>
-    a.name.localeCompare(b.name),
-  )
-  const debtByPlanId = new Map(
-    listDebtDetails(doc).map((detail) => [detail.plan.id, detail] as const),
-  )
   const assets = Object.values(doc.accountsById ?? {})
     .filter((account) => account.status === "active" && account.kind === "asset")
     .sort((a, b) => a.name.localeCompare(b.name))
+  const sheet =
+    variant === "debts" ? buildDebtsSheet(doc) : buildRecurringSheet(doc)
 
   function reset() {
     setEditingPlanId(null)
-    setTask("salary")
+    setTask(variant === "debts" ? "debt" : "salary")
     setName("")
     setAmount("")
     setOriginalAmount("")
@@ -357,157 +279,40 @@ export function RecurringPanel({ doc, changeDoc }: RecurringPanelProps) {
     }
   }
 
-  function setStatus(plan: Plan, status: "active" | "paused") {
-    changeDoc((draft) => {
-      applyUpsertPlan(draft, {
-        id: plan.id,
-        name: plan.name,
-        kind: plan.kind,
-        status,
-        amountOrFormula: plan.amountOrFormula,
-        schedule: plan.schedule ?? null,
-        linkedAccountIds: [...plan.linkedAccountIds],
-        occurrenceIds: [...plan.occurrenceIds],
-      })
-    })
-  }
-
   return (
     <section className="flex flex-col gap-5">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h2 className="text-sm font-medium">Recurring</h2>
+          <h2 className="text-sm font-medium">
+            {variant === "debts" ? "Debts" : "Recurring"}
+          </h2>
           <p className="text-xs text-muted-foreground">
-            Salary, bills, savings, and debt—organized by purpose.
+            {sheet.description} {sheet.summaryLabel}.
           </p>
         </div>
-        <Button type="button" size="sm" onClick={() => startCreate()}>
-          Add recurring
+        <Button
+          type="button"
+          size="sm"
+          onClick={() =>
+            startCreate(variant === "debts" ? "debt" : "salary")
+          }
+        >
+          {variant === "debts" ? "Add debt" : "Add recurring"}
         </Button>
       </div>
 
-      {GROUPS.map((group) => {
-        const rows = plans.filter((plan) => group.kinds.includes(plan.kind))
-        return (
-          <section key={group.title} className="flex flex-col gap-2">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xs font-medium text-muted-foreground">
-                {group.title}
-              </h3>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => startCreate(group.tasks[0])}
-              >
-                Add
-              </Button>
-            </div>
-            {rows.length === 0 ? (
-              <p className="text-xs text-muted-foreground">Nothing here yet.</p>
-            ) : (
-              <div className="rounded-md border border-border/80">
-                {rows.map((plan) => {
-                  const setupIssue = planSetupIssue(doc, plan)
-                  const debt = debtByPlanId.get(plan.id)
-                  return (
-                    <ListRow key={plan.id}>
-                      <StatusDot
-                        tone={
-                          setupIssue || plan.status !== "active"
-                            ? "muted"
-                            : "active"
-                        }
-                        label={setupIssue ? "incomplete" : plan.status}
-                      />
-                      <RowTitle>
-                        {plan.name}
-                        {setupIssue ? (
-                          <span className="ml-2 text-xs font-normal text-muted-foreground">
-                            Finish setup
-                          </span>
-                        ) : null}
-                      </RowTitle>
-                      <RowMeta>
-                        {setupIssue
-                          ? setupIssue
-                          : debt
-                            ? `original ${formatMinor(debt.originalMinor, debt.currency)} · paid ${formatMinor(debt.paidMinor, debt.currency)} · remaining ${formatMinor(debt.remainingMinor, debt.currency)} · next ${nextDate(plan)} · finish ${projectedFinish(plan, debt.remainingMinor)}`
-                            : `${amountLabel(plan)} · next ${nextDate(plan)}`}
-                        {plan.kind === "repayment" && !debt && !setupIssue
-                          ? " · Add the original amount to calculate debt"
-                          : ""}
-                      </RowMeta>
-                      <RowActions>
-                        {setupIssue ? (
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="outline"
-                            onClick={() => startEdit(plan)}
-                          >
-                            Finish setup
-                          </Button>
-                        ) : (
-                          <DropdownMenu>
-                            <DropdownMenuTrigger
-                              render={
-                                <Button
-                                  type="button"
-                                  size="icon-sm"
-                                  variant="ghost"
-                                  aria-label={`More actions for ${plan.name}`}
-                                />
-                              }
-                            >
-                              <MoreHorizontal />
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuGroup>
-                                <DropdownMenuItem onClick={() => startEdit(plan)}>
-                                  Edit
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() =>
-                                    setStatus(
-                                      plan,
-                                      plan.status === "paused"
-                                        ? "active"
-                                        : "paused",
-                                    )
-                                  }
-                                >
-                                  {plan.status === "paused" ? "Resume" : "Pause"}
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  variant="destructive"
-                                  onClick={() => {
-                                    if (
-                                      window.confirm(
-                                        "Cancel this recurring item? Past transactions and debt remain.",
-                                      )
-                                    ) {
-                                      changeDoc((draft) => {
-                                        applyCancelPlan(draft, plan.id)
-                                      })
-                                    }
-                                  }}
-                                >
-                                  Cancel recurring item
-                                </DropdownMenuItem>
-                              </DropdownMenuGroup>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        )}
-                      </RowActions>
-                    </ListRow>
-                  )
-                })}
-              </div>
-            )}
-          </section>
-        )
-      })}
+      <NestedSheetTable
+        rows={sheet.rows}
+        emptyLabel={
+          variant === "debts"
+            ? "No repayment plans yet. Add a debt to track remaining balance."
+            : "Nothing here yet. Add salary, a bill, or savings."
+        }
+        onOpenPlan={(planId) => {
+          const plan = doc.plansById[planId]
+          if (plan) startEdit(plan)
+        }}
+      />
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
@@ -534,10 +339,15 @@ export function RecurringPanel({ doc, changeDoc }: RecurringPanelProps) {
                     setRequiresOriginalAmount(nextTask === "debt")
                   }}
                 >
-                  <option value="salary">Salary</option>
-                  <option value="subscription">Bill or subscription</option>
-                  <option value="debt">Debt repayment</option>
-                  <option value="savings">Savings</option>
+                  {variant === "debts" ? (
+                    <option value="debt">Debt repayment</option>
+                  ) : (
+                    <>
+                      <option value="salary">Salary</option>
+                      <option value="subscription">Bill or subscription</option>
+                      <option value="savings">Savings</option>
+                    </>
+                  )}
                 </select>
               </Field>
               <Field>

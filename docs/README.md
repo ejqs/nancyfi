@@ -43,7 +43,8 @@ Do not maintain a parallel task list in markdown. When work is discovered in doc
 - [Public / guest share links](./architecture/public-share-links.md) — scoped view & limited guest actions (eventually)
 - [Multiplayer & sharing](./architecture/multiplayer.md)
 - [Responsive UI](./architecture/responsive.md)
-- [UI: Linear-inspired product chrome](./architecture/ui-linear-inspired.md) — list/shell patterns for signed-in UI
+- [UI: Linear-inspired product chrome](./architecture/ui-linear-inspired.md) — list/shell patterns for signed-in UI; money UI is nested sheets
+- [Clients](./architecture/clients.md) — web first; host-agnostic budget kernel
 - [MCP & email-driven updates](./architecture/mcp-and-email-updates.md) — brief; details in feature docs
 
 ### Conventions

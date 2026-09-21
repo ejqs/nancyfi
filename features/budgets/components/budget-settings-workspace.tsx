@@ -9,7 +9,10 @@ import type { BudgetDoc } from "../types"
 import { AccountsPanel } from "./accounts-panel"
 import { BudgetSettingsPanel } from "./budget-settings-panel"
 import { MembersPanel } from "./members-panel"
+import { OverviewPanel } from "./overview-panel"
 import { PlansPanel } from "./plans-panel"
+import type { WorkspaceSection } from "./section-tabs"
+import { TransactionsPanel } from "./transactions-panel"
 
 type BudgetSettingsWorkspaceProps = {
   budgetId: string
@@ -18,6 +21,7 @@ type BudgetSettingsWorkspaceProps = {
   doc: BudgetDoc
   changeDoc: (changeFn: ChangeFn<BudgetDoc>) => void
   onClose: () => void
+  onNavigateSheet?: (section: WorkspaceSection) => void
 }
 
 function SettingsGroup({
@@ -47,14 +51,38 @@ export function BudgetSettingsWorkspace({
   doc,
   changeDoc,
   onClose,
+  onNavigateSheet,
 }: BudgetSettingsWorkspaceProps) {
   return (
     <div className="flex flex-col gap-6">
+      <SettingsGroup
+        title="Overview"
+        description="Setup checklist and upcoming payday. Primary work happens on Recurring, Debts, and Payday sheets."
+      >
+        <OverviewPanel
+          doc={doc}
+          onNavigate={(section) => onNavigateSheet?.(section)}
+          onAddTransaction={() => undefined}
+          onOpenSettings={() => undefined}
+        />
+      </SettingsGroup>
+
+      <Separator />
+
       <SettingsGroup
         title="Money & categories"
         description="Bank, cash, debt, income sources, and spending categories."
       >
         <AccountsPanel doc={doc} changeDoc={changeDoc} />
+      </SettingsGroup>
+
+      <Separator />
+
+      <SettingsGroup
+        title="Transactions"
+        description="One-off expense, income, and transfer. Recurring items live on the Recurring and Debts sheets."
+      >
+        <TransactionsPanel doc={doc} changeDoc={changeDoc} />
       </SettingsGroup>
 
       <Separator />

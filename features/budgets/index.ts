@@ -35,6 +35,7 @@ export { BUDGET_SCHEMA_V1_INIT_BYTES } from "./schema-init"
 
 export {
   applyCancelPlan,
+  applyConfirmEntry,
   applyCreatePlanFromTemplate,
   applyDeletePlanTemplate,
   applyUpsertAccount,
@@ -42,10 +43,13 @@ export {
   applyUpsertPlan,
   applyUpsertPlanTemplate,
   applyVoidEntry,
+  assertEntryParent,
   assertPostingsBalanced,
   budgetDocNeedsShapeFix,
   buildBalancingPostings,
   cancelPlan,
+  cloneEntryPostings,
+  confirmEntry,
   createPlanFromTemplate,
   deletePlanTemplate,
   ensureBudgetDocShape,
@@ -81,9 +85,41 @@ export {
   listDebtDetails,
   listPaydayPlans,
   recentEntries,
+  subscriptionBurnMinor,
+  totalDebtRemainingMinor,
   type AccountBalanceRow,
   type DebtDetail,
 } from "./balances"
+
+export {
+  compareEntries,
+  entryAmountMinor,
+  isPaydayParentEntry,
+  listChildEntries,
+  listEntriesForPlan,
+  listRootEntries,
+  paydayDateFromParentId,
+  paydayParentEntryId,
+  planByOccurrencePrefix,
+} from "./entry-tree"
+
+export {
+  applyConfirmPaydayChildren,
+  applyPreparePayday,
+  confirmPaydayChildren,
+  preparePayday,
+  type PreparePaydayInput,
+  type PreparePaydayResult,
+} from "./payday-prepare"
+
+export {
+  buildDebtsSheet,
+  buildPaydaySheet,
+  buildRecurringSheet,
+  type NestedSheet,
+  type NestedSheetKind,
+  type NestedSheetRow,
+} from "./sheets"
 
 export { formatMinor, parseMajorToMinor } from "./money-format"
 

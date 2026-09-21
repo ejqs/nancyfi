@@ -33,7 +33,7 @@ export function BudgetDetailClient({
   userId: string
 }) {
   const router = useRouter()
-  const [section, setSection] = useState<WorkspaceSection>("home")
+  const [section, setSection] = useState<WorkspaceSection>("recurring")
   const [budgets, setBudgets] = useState<BudgetListItem[]>([])
 
   useEffect(() => {

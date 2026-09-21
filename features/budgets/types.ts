@@ -53,6 +53,12 @@ export type Entry = {
   status: EntryStatus
   postings: Posting[]
   sourcePlanOccurrenceId?: string
+  /**
+   * Optional nest under another Entry (payday grouping, splits).
+   * Must point at an Entry id — never an Account. Cycles are rejected.
+   * Account folders use `Account.parentId` instead.
+   */
+  parentId?: string
 }
 
 /**

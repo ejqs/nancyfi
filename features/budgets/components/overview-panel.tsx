@@ -148,8 +148,8 @@ export function OverviewPanel({
               done={review.length === 0}
               label="Review"
               description="Confirm anything Nancyfi prepared."
-              action="Review transactions"
-              onClick={() => onNavigate("transactions")}
+              action="Review payday"
+              onClick={() => onNavigate("payday")}
             />
           </ol>
         </section>
@@ -184,7 +184,7 @@ export function OverviewPanel({
               type="button"
               variant="ghost"
               size="sm"
-              onClick={() => onNavigate("transactions")}
+              onClick={() => onNavigate("payday")}
             >
               Review all
             </Button>

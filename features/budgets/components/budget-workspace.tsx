@@ -16,14 +16,12 @@ import {
 } from "../mutations"
 import type { BudgetDoc } from "../types"
 import { BudgetSettingsWorkspace } from "./budget-settings-workspace"
-import { OverviewPanel } from "./overview-panel"
 import { RecurringPanel } from "./recurring-panel"
-import { PaydayBoard } from "./scenario-boards"
+import { PaydaySheet } from "./payday-sheet"
 import {
   WORKSPACE_SECTIONS,
   type WorkspaceSection,
 } from "./section-tabs"
-import { TransactionsPanel } from "./transactions-panel"
 
 /** Local IndexedDB is fast; remote sync may need longer before giving up. */
 const LOCAL_FIND_TIMEOUT_MS = 4_000
@@ -73,9 +71,8 @@ export function BudgetWorkspace({
     { suspense: false },
   )
   const [internalSection, setInternalSection] =
-    useState<WorkspaceSection>("home")
+    useState<WorkspaceSection>("recurring")
   const [settingsOpen, setSettingsOpen] = useState(false)
-  const [transactionDialogOpen, setTransactionDialogOpen] = useState(false)
   const [missingOnDevice, setMissingOnDevice] = useState(false)
 
   const section = controlledSection ?? internalSection
@@ -194,33 +191,21 @@ export function BudgetWorkspace({
           doc={doc}
           changeDoc={changeDoc}
           onClose={() => setSettingsOpen(false)}
+          onNavigateSheet={(next) => {
+            setSettingsOpen(false)
+            setSection(next)
+          }}
         />
       ) : null}
 
-      {!settingsOpen && section === "home" ? (
-        <OverviewPanel
-          doc={doc}
-          onNavigate={setSection}
-          onAddTransaction={() => {
-            setTransactionDialogOpen(true)
-            setSection("transactions")
-          }}
-          onOpenSettings={() => setSettingsOpen(true)}
-        />
-      ) : null}
       {!settingsOpen && section === "recurring" ? (
-        <RecurringPanel doc={doc} changeDoc={changeDoc} />
+        <RecurringPanel doc={doc} changeDoc={changeDoc} variant="recurring" />
       ) : null}
-      {!settingsOpen && section === "transactions" ? (
-        <TransactionsPanel
-          doc={doc}
-          changeDoc={changeDoc}
-          openCreate={transactionDialogOpen}
-          onCreateOpenChange={setTransactionDialogOpen}
-        />
+      {!settingsOpen && section === "debts" ? (
+        <RecurringPanel doc={doc} changeDoc={changeDoc} variant="debts" />
       ) : null}
       {!settingsOpen && section === "payday" ? (
-        <PaydayBoard
+        <PaydaySheet
           doc={doc}
           changeDoc={changeDoc}
           onOpenRecurring={() => setSection("recurring")}

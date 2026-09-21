@@ -119,6 +119,32 @@ export function listDebtDetails(doc: BudgetDoc): DebtDetail[] {
     .sort((a, b) => a.plan.name.localeCompare(b.plan.name))
 }
 
+/** Posted subscription spend derived from history — not a catalog duplicate. */
+export function subscriptionBurnMinor(doc: BudgetDoc): number {
+  const currency = doc.defaultCurrency.toUpperCase()
+  let sum = 0
+  for (const plan of Object.values(doc.plansById ?? {})) {
+    if (plan.kind !== "subscription" || plan.status === "cancelled") continue
+    const prefix = `${plan.id}:`
+    for (const entry of Object.values(doc.entriesById ?? {})) {
+      if (entry.status !== "posted") continue
+      if (!entry.sourcePlanOccurrenceId?.startsWith(prefix)) continue
+      for (const posting of entry.postings) {
+        if (posting.money.currency.toUpperCase() !== currency) continue
+        const account = doc.accountsById[posting.accountId]
+        if (account?.kind === "expense" && posting.money.amountMinor > 0) {
+          sum += posting.money.amountMinor
+        }
+      }
+    }
+  }
+  return sum
+}
+
+export function totalDebtRemainingMinor(doc: BudgetDoc): number {
+  return listDebtDetails(doc).reduce((sum, row) => sum + row.remainingMinor, 0)
+}
+
 /** Payday-relevant plans: income + allocation with schedules. */
 export function listPaydayPlans(doc: BudgetDoc): Plan[] {
   return Object.values(doc.plansById ?? {})

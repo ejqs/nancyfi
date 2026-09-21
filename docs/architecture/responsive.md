@@ -21,11 +21,11 @@ Nancyfi is a **responsive website**. One codebase adapts to desktop, tablet, and
 
 ## Navigation (resolved)
 
-- Primary budget jobs are **Home**, **Payday**, **Recurring**, and
-  **Transactions**. Account/category setup, People, advanced data, and budget
-  configuration live in grouped Settings.
+- Primary budget jobs are **Recurring**, **Debts**, and **Payday** nested
+  sheets. Account/category setup, one-off Transactions, People, advanced data,
+  and budget configuration live in grouped Settings.
 - **Desktop:** one persistent left sidebar (`AppShell`) lists budgets and the
-  four primary jobs. Do not repeat the same destinations as content tabs.
+  three primary sheets. Do not repeat the same destinations as content tabs.
 - **Mobile:** that sidebar becomes a drawer opened from the sticky header.
   Do not render a second horizontally clipped section strip; sync status stays
   in the header.
