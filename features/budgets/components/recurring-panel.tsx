@@ -318,7 +318,13 @@ export function RecurringPanel({
         <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>
-              {editingPlanId ? "Edit recurring item" : "Add recurring item"}
+              {editingPlanId
+                ? variant === "debts"
+                  ? "Edit debt"
+                  : "Edit recurring item"
+                : variant === "debts"
+                  ? "Add debt"
+                  : "Add recurring item"}
             </DialogTitle>
             <DialogDescription>
               Choose the purpose first. Only relevant scheduling fields follow.
@@ -500,7 +506,11 @@ export function RecurringPanel({
                 Cancel
               </Button>
               <Button type="submit" disabled={assets.length === 0}>
-                {editingPlanId ? "Save changes" : "Add recurring item"}
+                {editingPlanId
+                  ? "Save changes"
+                  : variant === "debts"
+                    ? "Add debt"
+                    : "Add recurring item"}
               </Button>
             </DialogFooter>
           </form>
